@@ -6,6 +6,9 @@ USEPKG += nrfx
 # include nrfx_nfct support
 USEMODULE += nrfx_nfct
 
+USEMODULE += ztimer
+USEMODULE += ztimer_sec
+
 CFLAGS += -Wno-error=cast-align
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -Wno-error=unused-parameter

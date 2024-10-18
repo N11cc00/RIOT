@@ -55,7 +55,7 @@ extern "C" {
  *
  * @param expression Expression to be evaluated.
  */
-#define NRFX_ASSERT(expression)
+#define NRFX_ASSERT(expression) assert(expression)
 
 /**
  * @brief Macro for placing a compile time assertion.
@@ -70,14 +70,14 @@ extern "C" {
  * @param irq_number IRQ number.
  * @param priority   Priority to be set.
  */
-#define NRFX_IRQ_PRIORITY_SET(irq_number, priority)
+#define NRFX_IRQ_PRIORITY_SET(irq_number, priority) NVIC_SetPriority(irq_number, priority)
 
 /**
  * @brief Macro for enabling a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_ENABLE(irq_number)
+#define NRFX_IRQ_ENABLE(irq_number) NVIC_EnableIRQ(irq_number)
 
 /**
  * @brief Macro for checking if a specific IRQ is enabled.
@@ -94,7 +94,7 @@ extern "C" {
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_DISABLE(irq_number)
+#define NRFX_IRQ_DISABLE(irq_number) NVIC_DisableIRQ(irq_number)
 
 /**
  * @brief Macro for setting a specific IRQ as pending.

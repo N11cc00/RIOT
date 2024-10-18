@@ -51,6 +51,16 @@ extern "C" {
 /* as of now we are only using the plain headers of the nrfx package and there
  * is nothing to configure for this */
 
+#define NRFX_NFCT_ENABLED 1
+
+
+// if this was enabled, a not properly defined macro would make the code not compile
+#define NFCT_WORKAROUND_USES_TIMER 0
+
+#define USE_WORKAROUND_FOR_ANOMALY_79 0
+
+#define USE_WORKAROUND_FOR_ANOMALY_190 0 
+
 #ifdef __cplusplus
 }
 #endif
