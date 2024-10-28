@@ -1,4 +1,4 @@
-BOARD ?= nrf52dk
+BOARD ?= nrf52840dk
 include ../Makefile.pkg_common
 
 USEPKG += nrfx
@@ -12,5 +12,8 @@ USEMODULE += ztimer_sec
 CFLAGS += -Wno-error=cast-align
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -Wno-error=unused-parameter
+CFLAGS += -DDEBUG_ASSERT_VERBOSE
+CFLAGS += -DDEVELHELP
+CFLAGS += -DISR_STACKSIZE=1024*8
 
 include $(RIOTBASE)/Makefile.include

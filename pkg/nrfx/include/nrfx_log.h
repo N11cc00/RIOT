@@ -44,6 +44,8 @@
 extern "C" {
 #endif
 
+#include "log.h"
+
 /**
  * @defgroup nrfx_log nrfx_log.h
  * @{
@@ -59,7 +61,7 @@ extern "C" {
  * @param format printf-style format string, optionally followed by arguments
  *               to be formatted and inserted in the resulting string.
  */
-#define NRFX_LOG_ERROR(format, ...)
+#define NRFX_LOG_ERROR(format, ...) printf(format, ##__VA_ARGS__); puts("");
 
 /**
  * @brief Macro for logging a message with the severity level WARNING.
@@ -67,7 +69,7 @@ extern "C" {
  * @param format printf-style format string, optionally followed by arguments
  *               to be formatted and inserted in the resulting string.
  */
-#define NRFX_LOG_WARNING(format, ...)
+#define NRFX_LOG_WARNING(format, ...) printf(format, ##__VA_ARGS__); puts("");
 
 /**
  * @brief Macro for logging a message with the severity level INFO.
@@ -75,7 +77,7 @@ extern "C" {
  * @param format printf-style format string, optionally followed by arguments
  *               to be formatted and inserted in the resulting string.
  */
-#define NRFX_LOG_INFO(format, ...)
+#define NRFX_LOG_INFO(format, ...) printf(format, ##__VA_ARGS__); puts("");
 
 /**
  * @brief Macro for logging a message with the severity level DEBUG.
@@ -83,8 +85,7 @@ extern "C" {
  * @param format printf-style format string, optionally followed by arguments
  *               to be formatted and inserted in the resulting string.
  */
-#define NRFX_LOG_DEBUG(format, ...)
-
+#define NRFX_LOG_DEBUG(format, ...) printf(format, ##__VA_ARGS__); puts("");
 
 /**
  * @brief Macro for logging a memory dump with the severity level ERROR.
@@ -126,7 +127,14 @@ extern "C" {
  *
  * @return String containing the textual representation of the error code.
  */
-#define NRFX_LOG_ERROR_STRING_GET(error_code)
+static char __error_string[64]; 
+
+static char* error_code_to_string(unsigned int error_code) {
+    sprintf(__error_string, "%d (0x%08X)", error_code, error_code);
+    return __error_string;
+}
+
+#define NRFX_LOG_ERROR_STRING_GET(error_code) error_code_to_string(error_code) 
 
 /** @} */
 
