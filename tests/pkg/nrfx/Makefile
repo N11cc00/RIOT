@@ -8,6 +8,7 @@ USEMODULE += nrfx_nfct
 
 USEMODULE += ztimer
 USEMODULE += ztimer_sec
+USEMODULE += ztimer_msec
 
 CFLAGS += -Wno-error=cast-align
 CFLAGS += -Wno-error=unused-variable

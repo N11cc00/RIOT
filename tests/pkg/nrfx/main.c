@@ -22,7 +22,7 @@ uint8_t data_buffer[256];
 
 nrfx_nfct_data_desc_t data_desc_tx;
 nrfx_nfct_data_desc_t data_desc_rx = {
-    .data_size = 0,
+    .data_size = sizeof(data_buffer),
     .p_data = data_buffer
 };
 
@@ -31,6 +31,16 @@ static void print_state(void) {
     printf("");
 } 
 */
+/*
+static uint32_t min(uint32_t a, uint32_t b) {
+    if (a > b) {
+        return b;
+    } else {
+        return a;
+    }
+}
+*/
+
 void create_ndef_text_record(const char *text, uint8_t *buffer, size_t *length) {
     const char *language_code = "en";
     size_t text_length = strlen(text);
@@ -50,25 +60,73 @@ void create_ndef_text_record(const char *text, uint8_t *buffer, size_t *length) 
     *length = 5 + language_code_length + text_length;
 }
 
+/*
+static void test_send_ndef(void) {
+    uint8_t ndef_buffer[256];
+    size_t ndef_length;
+
+    create_ndef_text_record("Hello, NFC!", ndef_buffer, &ndef_length);
+
+    data_desc_tx.data_size = ndef_length;
+    data_desc_tx.p_data = ndef_buffer;
+
+    nrfx_err_t error = nrfx_nfct_tx(&data_desc_tx, NRF_NFCT_FRAME_DELAY_MODE_FREERUN);
+    assert(error == NRFX_SUCCESS);
+} 
+*/
+
+static void print_buffer_as_hex(const uint8_t* buffer, const uint32_t size) {
+    // prints each byte as hexadecimal values (0x33);
+    printf("Buffer: ");
+    for (uint32_t i = 0; i < size; i++) {
+        printf("0x%02X ", buffer[i]);
+    }
+}
+
 
 void event_printer(nrfx_nfct_evt_t const * event) {
-    printf("EVENT: %d\n", event->evt_id);
+    printf("Event caught: " );
+    if (event->evt_id == NRFX_NFCT_EVT_FIELD_DETECTED) {
+        printf("Field detected");
+        // test_send_ndef();
+    } else if (event->evt_id == NRFX_NFCT_EVT_FIELD_LOST) {
+        printf("Field lost");
+    } else if (event->evt_id == NRFX_NFCT_EVT_SELECTED) {
+        printf("Field selected");
+    } else if (event->evt_id == NRFX_NFCT_EVT_RX_FRAMESTART) {
+        printf("RX Framestart");
+    } else if (event->evt_id == NRFX_NFCT_EVT_RX_FRAMEEND) {
+        printf("RX Framend\n");
+        printf("RX Status: %lX\n", event->params.rx_frameend.rx_status);
+        printf("RX Data Size: %lu\n", event->params.rx_frameend.rx_data.data_size);
+        print_buffer_as_hex(event->params.rx_frameend.rx_data.p_data, event->params.rx_frameend.rx_data.data_size);
+    } else if (event->evt_id == NRFX_NFCT_EVT_TX_FRAMESTART) {
+        printf("TX Framestart");
+    } else if (event->evt_id == NRFX_NFCT_EVT_TX_FRAMEEND) {
+        printf("TX Frameend");
+    } else if (event->evt_id == NRFX_NFCT_EVT_ERROR) {
+        printf("Error Event\n");
+        printf("Error Reason: %d", event->params.error.reason);
+    } else {
+        printf("UNKNOWN EVENT");
+    }
+    printf("\n");
+    //printf("EVENT: %d, %X\n", event->evt_id, event->evt_id);
 }
 
 
 static void test_init(void) {
     puts("[TEST]: Initializing driver");
     nrfx_nfct_config_t config = {
-        .rxtx_int_mask = NRFX_NFCT_EVT_FIELD_DETECTED |
+        .rxtx_int_mask = 0 /* NRFX_NFCT_EVT_FIELD_DETECTED |
                          NRFX_NFCT_EVT_ERROR          |
-                         NRFX_NFCT_EVT_SELECTED /* |
-                         
+                         NRFX_NFCT_EVT_SELECTED 
+                          |
                          NRFX_NFCT_EVT_FIELD_LOST |
                          NRFX_NFCT_EVT_RX_FRAMEEND |
                          NRFX_NFCT_EVT_RX_FRAMESTART |
                          NRFX_NFCT_EVT_TX_FRAMEEND |
-                         NRFX_NFCT_EVT_TX_FRAMESTART
-                         */
+                         NRFX_NFCT_EVT_TX_FRAMESTART */
                         ,
         .cb = event_printer,
         .irq_priority = 1
@@ -120,19 +178,6 @@ static void test_scan_for_field(void) {
 }
 */
 
-void test_send_ndef(void) {
-    uint8_t ndef_buffer[256];
-    size_t ndef_length;
-
-    create_ndef_text_record("Hello, NFC!", ndef_buffer, &ndef_length);
-
-    data_desc_tx.data_size = ndef_length;
-    data_desc_tx.p_data = ndef_buffer;
-
-    nrfx_err_t error = nrfx_nfct_tx(&data_desc_tx, NRF_NFCT_FRAME_DELAY_MODE_WINDOW);
-    assert(error == NRFX_SUCCESS);
-} 
-
 void test_receive(void) {
     nrfx_err_t error = nrfx_nfct_rx(&data_desc_rx);
     assert(error == NRFX_SUCCESS);
@@ -143,13 +188,15 @@ int main(void) {
     puts("Starting tests");
     test_init();
 
-    nrfx_nfct_autocolres_disable();
+    nrfx_nfct_autocolres_enable();
 
-    test_enable();
+    test_enable();   
+    
+    nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_TXFRAMEEND_ENABLERXDATA_MASK);
 
-    nrfx_nfct_state_force(NRFX_NFCT_STATE_ACTIVATED);
+    // nrfx_nfct_state_force(NRFX_NFCT_STATE_ACTIVATED);
 
-    ztimer_sleep(ZTIMER_SEC, 2);
+    // ztimer_sleep(ZTIMER_SEC, 2);
 
     // test_send_ndef();
 
@@ -158,8 +205,12 @@ int main(void) {
     // nrfx_nfct_state_force(NRFX_NFCT_STATE_ACTIVATED);
     
     // test_scan_for_field();
+
     while(1) {
-        printf("DATA: %lu, %s\n", data_desc_rx.data_size, data_desc_rx.p_data);
+        print_buffer_as_hex(data_desc_rx.p_data, data_desc_rx.data_size);
+        printf("\n");
+        printf("State: %X\n", nrfy_nfct_tag_state_get(NRF_NFCT));
+        ztimer_sleep(ZTIMER_MSEC, 500);
     };
     return 0;
 }
