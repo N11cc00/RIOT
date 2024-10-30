@@ -20,6 +20,7 @@
 
 #define BLOCK_SIZE 4
 #define READ_COMMAND 0x30
+#define HALT_COMMAND 0x50
 
 uint8_t data_buffer_rx[256];
 uint8_t data_buffer_tx[256];
@@ -36,7 +37,7 @@ nrfx_nfct_data_desc_t data_desc_rx = {
     .data_size = sizeof(data_buffer_rx),
     .p_data = data_buffer_rx
 };
-uint8_t uid[] = {'\x01', '\x02', '\x03', '\xFF'};
+uint8_t uid[] = {'\x01', '\x02', '\x03', '\xFF', '\x04', '\x05', '\x06', '\x07', '\x08', '\x09'};
 
 
 /*
@@ -53,6 +54,8 @@ static uint32_t min(uint32_t a, uint32_t b) {
     }
 }
 
+bool selected = false;
+bool autocolres_in_progress = false;
 
 void create_ndef_text_record(const char *text, uint8_t *buffer, size_t *length) {
     const char *language_code = "en";
@@ -129,25 +132,45 @@ static void process_command(const uint8_t* buffer, const uint32_t size) {
     if (buffer[0] == READ_COMMAND) {
         uint8_t block_address = buffer[1];
         handle_read_command(block_address);
+
+    } else if (buffer[0] == HALT_COMMAND) {
+        selected = false;
     } else {
-        printf("Unknown command received\n");
+        printf("Unknown command received (0x%02X)\n", buffer[0]);
     }
 
+}
+
+static void test_receive(void) {
+    nrfx_err_t error = nrfx_nfct_rx(&data_desc_rx);
+    assert(error == NRFX_SUCCESS);
 }
 
 
 void event_printer(nrfx_nfct_evt_t const * event) {
     printf("Event caught: " );
     if (event->evt_id == NRFX_NFCT_EVT_FIELD_DETECTED) {
+        if (selected) {
+            return;
+        }
+        selected = false;
         printf("Field detected");
+
         // test_send_ndef();
     } else if (event->evt_id == NRFX_NFCT_EVT_FIELD_LOST) {
+        selected = false;
+        // nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK);
         printf("Field lost");
     } else if (event->evt_id == NRFX_NFCT_EVT_SELECTED) {
+        selected = true;
         printf("Field selected");
+        test_receive();
     } else if (event->evt_id == NRFX_NFCT_EVT_RX_FRAMESTART) {
         printf("RX Framestart");
     } else if (event->evt_id == NRFX_NFCT_EVT_RX_FRAMEEND) {
+        if (!selected) {
+            return;
+        }
         printf("RX Framend\n");
         printf("RX Status: %lX\n", event->params.rx_frameend.rx_status);
         printf("RX Data Size: %lu\n", event->params.rx_frameend.rx_data.data_size);
@@ -171,13 +194,13 @@ void event_printer(nrfx_nfct_evt_t const * event) {
 static void test_init(void) {
     puts("[TEST]: Initializing driver");
     nrfx_nfct_config_t config = {
-        .rxtx_int_mask = /* NRFX_NFCT_EVT_FIELD_DETECTED |
+        .rxtx_int_mask = NRFX_NFCT_EVT_FIELD_DETECTED |
                          NRFX_NFCT_EVT_ERROR          |
-                         NRFX_NFCT_EVT_SELECTED |
-                         NRFX_NFCT_EVT_FIELD_LOST | */
-                         NRFX_NFCT_EVT_RX_FRAMEEND      |
-                         NRFX_NFCT_EVT_RX_FRAMESTART    |
-                         NRFX_NFCT_EVT_TX_FRAMEEND      |
+                         NRFX_NFCT_EVT_SELECTED       |
+                         NRFX_NFCT_EVT_FIELD_LOST     | 
+                         NRFX_NFCT_EVT_RX_FRAMEEND    |
+                         NRFX_NFCT_EVT_RX_FRAMESTART  |
+                         NRFX_NFCT_EVT_TX_FRAMEEND    |
                          NRFX_NFCT_EVT_TX_FRAMESTART
                         ,
         .cb = event_printer,
@@ -230,15 +253,12 @@ static void test_scan_for_field(void) {
 }
 */
 
-static void test_receive(void) {
-    nrfx_err_t error = nrfx_nfct_rx(&data_desc_rx);
-    assert(error == NRFX_SUCCESS);
-}
+
 
 static void configure_autocolres(void) {
     nrfx_nfct_nfcid1_t nfcid1 = {
         .p_id = uid,
-        .id_size = NRFX_NFCT_NFCID1_SINGLE_SIZE,
+        .id_size = NRFX_NFCT_NFCID1_TRIPLE_SIZE,
     };
 
     nrfx_nfct_param_t param = {
@@ -261,7 +281,7 @@ int main(void) {
 
     test_enable();   
     
-    nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_TXFRAMEEND_ENABLERXDATA_MASK);
+    nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_FIELDLOST_SENSE_MASK);
 
     // nrfx_nfct_state_force(NRFX_NFCT_STATE_ACTIVATED);
 
@@ -269,7 +289,7 @@ int main(void) {
 
     // test_send_ndef();
 
-    test_receive();
+    // test_receive();
     
     // nrfx_nfct_state_force(NRFX_NFCT_STATE_ACTIVATED);
     
