@@ -13,6 +13,7 @@ USEMODULE += ztimer_msec
 CFLAGS += -Wno-error=cast-align
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -Wno-error=unused-parameter
+CFLAGS += -Wno-error=unused-function
 CFLAGS += -DDEBUG_ASSERT_VERBOSE
 CFLAGS += -DDEVELHELP
 CFLAGS += -DISR_STACKSIZE=1024*8

@@ -18,20 +18,33 @@
 #include "cpu.h"
 
 
-uint8_t data_buffer[256];
+#define BLOCK_SIZE 4
+#define READ_COMMAND 0x30
+
+uint8_t data_buffer_rx[256];
+uint8_t data_buffer_tx[256];
+
+uint8_t tag_memory[256] = {
+    // Initialize with some example data
+    0x00, 0x01, 0x02, 0x03, 0xff, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+    // Add more data as needed
+};
 
 nrfx_nfct_data_desc_t data_desc_tx;
 nrfx_nfct_data_desc_t data_desc_rx = {
-    .data_size = sizeof(data_buffer),
-    .p_data = data_buffer
+    .data_size = sizeof(data_buffer_rx),
+    .p_data = data_buffer_rx
 };
+uint8_t uid[] = {'\x01', '\x02', '\x03', '\xFF'};
+
 
 /*
 static void print_state(void) {
     printf("");
 } 
 */
-/*
+
 static uint32_t min(uint32_t a, uint32_t b) {
     if (a > b) {
         return b;
@@ -39,7 +52,7 @@ static uint32_t min(uint32_t a, uint32_t b) {
         return a;
     }
 }
-*/
+
 
 void create_ndef_text_record(const char *text, uint8_t *buffer, size_t *length) {
     const char *language_code = "en";
@@ -78,9 +91,48 @@ static void test_send_ndef(void) {
 static void print_buffer_as_hex(const uint8_t* buffer, const uint32_t size) {
     // prints each byte as hexadecimal values (0x33);
     printf("Buffer: ");
-    for (uint32_t i = 0; i < size; i++) {
+    for (uint32_t i = 0; i < min(256, size); i++) {
         printf("0x%02X ", buffer[i]);
     }
+}
+
+void handle_read_command(uint8_t block_address) {
+    // Calculate the starting address in the tag's memory
+    uint8_t start_address = block_address * BLOCK_SIZE;
+
+    // Copy 16 bytes of data from the tag's memory to the response buffer
+    for (int i = 0; i < 16; i++) {
+        data_buffer_tx[i] = tag_memory[start_address + i];
+    }
+
+    // Set up the data descriptor for transmission
+    data_desc_tx.data_size = 16;
+    data_desc_tx.p_data = data_buffer_tx;
+
+    // Transmit the response
+    nrfx_err_t error = nrfx_nfct_tx(&data_desc_tx, NRF_NFCT_FRAME_DELAY_MODE_WINDOW);
+    assert(error == NRFX_SUCCESS);
+}
+
+static void process_command(const uint8_t* buffer, const uint32_t size) {
+
+
+    if (size == 0) {
+        return;
+    }
+
+    /*
+        0x30 is the read command sent by the PCD
+    */
+
+
+    if (buffer[0] == READ_COMMAND) {
+        uint8_t block_address = buffer[1];
+        handle_read_command(block_address);
+    } else {
+        printf("Unknown command received\n");
+    }
+
 }
 
 
@@ -99,7 +151,8 @@ void event_printer(nrfx_nfct_evt_t const * event) {
         printf("RX Framend\n");
         printf("RX Status: %lX\n", event->params.rx_frameend.rx_status);
         printf("RX Data Size: %lu\n", event->params.rx_frameend.rx_data.data_size);
-        print_buffer_as_hex(event->params.rx_frameend.rx_data.p_data, event->params.rx_frameend.rx_data.data_size);
+        // print_buffer_as_hex(event->params.rx_frameend.rx_data.p_data, event->params.rx_frameend.rx_data.data_size);
+        process_command(event->params.rx_frameend.rx_data.p_data, event->params.rx_frameend.rx_data.data_size);
     } else if (event->evt_id == NRFX_NFCT_EVT_TX_FRAMESTART) {
         printf("TX Framestart");
     } else if (event->evt_id == NRFX_NFCT_EVT_TX_FRAMEEND) {
@@ -118,15 +171,14 @@ void event_printer(nrfx_nfct_evt_t const * event) {
 static void test_init(void) {
     puts("[TEST]: Initializing driver");
     nrfx_nfct_config_t config = {
-        .rxtx_int_mask = 0 /* NRFX_NFCT_EVT_FIELD_DETECTED |
+        .rxtx_int_mask = /* NRFX_NFCT_EVT_FIELD_DETECTED |
                          NRFX_NFCT_EVT_ERROR          |
-                         NRFX_NFCT_EVT_SELECTED 
-                          |
-                         NRFX_NFCT_EVT_FIELD_LOST |
-                         NRFX_NFCT_EVT_RX_FRAMEEND |
-                         NRFX_NFCT_EVT_RX_FRAMESTART |
-                         NRFX_NFCT_EVT_TX_FRAMEEND |
-                         NRFX_NFCT_EVT_TX_FRAMESTART */
+                         NRFX_NFCT_EVT_SELECTED |
+                         NRFX_NFCT_EVT_FIELD_LOST | */
+                         NRFX_NFCT_EVT_RX_FRAMEEND      |
+                         NRFX_NFCT_EVT_RX_FRAMESTART    |
+                         NRFX_NFCT_EVT_TX_FRAMEEND      |
+                         NRFX_NFCT_EVT_TX_FRAMESTART
                         ,
         .cb = event_printer,
         .irq_priority = 1
@@ -178,9 +230,23 @@ static void test_scan_for_field(void) {
 }
 */
 
-void test_receive(void) {
+static void test_receive(void) {
     nrfx_err_t error = nrfx_nfct_rx(&data_desc_rx);
     assert(error == NRFX_SUCCESS);
+}
+
+static void configure_autocolres(void) {
+    nrfx_nfct_nfcid1_t nfcid1 = {
+        .p_id = uid,
+        .id_size = NRFX_NFCT_NFCID1_SINGLE_SIZE,
+    };
+
+    nrfx_nfct_param_t param = {
+        .id = NRFX_NFCT_PARAM_ID_NFCID1,
+        .data.nfcid1 = nfcid1
+    };
+    nrfx_nfct_parameter_set(&param);
+    nrfx_nfct_autocolres_enable();
 }
 
 int main(void) {
@@ -188,7 +254,10 @@ int main(void) {
     puts("Starting tests");
     test_init();
 
-    nrfx_nfct_autocolres_enable();
+    
+
+    configure_autocolres();
+    
 
     test_enable();   
     
@@ -207,10 +276,10 @@ int main(void) {
     // test_scan_for_field();
 
     while(1) {
-        print_buffer_as_hex(data_desc_rx.p_data, data_desc_rx.data_size);
+        /* print_buffer_as_hex(data_desc_rx.p_data, data_desc_rx.data_size);
         printf("\n");
         printf("State: %X\n", nrfy_nfct_tag_state_get(NRF_NFCT));
-        ztimer_sleep(ZTIMER_MSEC, 500);
+        ztimer_sleep(ZTIMER_MSEC, 500); */ 
     };
     return 0;
 }
