@@ -44,5 +44,9 @@ int main(void) {
 
 
 
-    initialize_t2t(&tag, true, nfcid, sizeof(nfcid));
+    initialize_t2t(&tag, false, nfcid, sizeof(nfcid));
+
+    enable_t2t();
+
+    start_event_loop();
 }
