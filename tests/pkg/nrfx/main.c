@@ -24,10 +24,10 @@ int main(void) {
         '\x55', '\x66', '\x00', '\x00', // Internal / Lock
         '\xE1', '\x10', '\x06', '\x00', // Capability Container
         '\x03', '\x0C', '\xD1', '\x01', 
-        '\x07',                         // TLV for NDEF message (Type, Length, Payload)
+        '\x08',                         // TLV for NDEF message (Type, Length, Payload)
         '\x54', '\x02', 'e', 'n',
-        'H',   'e',    'l',  'l', 
-        'o', '\xFE', '\x00', '\x00', 
+        'H',    'e',    'l', 'l', 
+        'o',    '\xFE', '\x00', '\x00', 
         '\x00', '\x00', '\x00', '\x00', // Data
         '\x00', '\x00', '\x00', '\x00',  // Data
         '\x00', '\x00', '\x00', '\x00',  // Data
