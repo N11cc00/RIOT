@@ -91,7 +91,7 @@ static void parse_received_data(const uint8_t *data, uint32_t size) {
     uint8_t data_size = size - 1;
 
     if (command == T2T_READ_COMMAND) {
-        uint8_t block_address = data[1];
+        uint8_t block_address = data_buffer[0];
         LOG_DEBUG("Read command received for block %d\n", block_address);
         process_read_command(block_address);
     } else if (command == T2T_HALT_COMMAND) {
