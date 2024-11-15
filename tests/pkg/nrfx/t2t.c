@@ -96,6 +96,9 @@ static void parse_received_data(const uint8_t *data, uint32_t size) {
         process_read_command(block_address);
     } else if (command == T2T_HALT_COMMAND) {
         LOG_DEBUG("Halt command received\n");
+        // TODO: work out redundant scanning of tag
+        // nrf_nfct_shorts_disable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK);
+        // nrfx_nfct_init_substate_force(NRFX_NFCT_ACTIVE_STATE_SLEEP);
         selected = false;
     } else {
         LOG_WARNING("Unknown command received (0x%02X)\n", command);
@@ -145,7 +148,7 @@ static void selected_handler(event_t * event) {
 
 static void field_detected_handler(event_t * event) {
     LOG_DEBUG("[EVENT] Field detected\n");
-    // nrfx_nfct_state_force(NRFX_NFCT_STATE_ACTIVATED);
+    // nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK);
 }
 
 static void field_lost_handler(event_t * event) {
