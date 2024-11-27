@@ -71,6 +71,8 @@ static void process_write_command(uint8_t block_address, const uint8_t* bytes) {
     uint32_t position = block_address * T2T_BLOCK_SIZE;
     
     // write 4 bytes to the address
+
+    print_bytes_as_hex(bytes, 4);
     tag->memory[position] = bytes[0];
     tag->memory[position + 1] = bytes[1];
     tag->memory[position + 2] = bytes[2];
@@ -78,6 +80,8 @@ static void process_write_command(uint8_t block_address, const uint8_t* bytes) {
 
     LOG_DEBUG("Wrote 4 bytes to block number %d", block_address);
     send_ack();
+    print_bytes_as_hex(tag->memory, tag->memory_size);
+    
 }
 
 
