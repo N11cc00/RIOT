@@ -2,35 +2,37 @@
 
 
 int main(void) {
+        nfct_type_2_tag_t tag;
     uint8_t tag_memory[] = {
-    '\x01', '\x02', '\x03', '\xFF', // Internal
-    '\x11', '\x22', '\x33', '\x44', // Serial Number
-    '\x55', '\x66', '\x00', '\x00', // Internal / Lock
-    '\xE1', '\x10', '\x06', '\x00', // Capability Container
-    '\x03', '\x03', '\xD0', '\x00', // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
-    '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x01', '\x02', '\x03', '\xFF', // Internal
+        '\x11', '\x22', '\x33', '\x44', // Serial Number
+        '\x55', '\x66', '\x00', '\x00', // Internal / Lock
+        '\xE1', '\x10', '\x06', '\x00', // Capability Container
+        '\x03', '\x0C', '\xD1', '\x01', 
+        '\x08',                         // TLV for NDEF message (Type, Length, Payload)
+        '\x54', '\x02', 'e', 'n',
+        'H',    'e',    'l', 'l', 
+        'o',    '\xFE', '\x00', '\x00', 
+        '\x00', '\x00', '\x00', '\x00', // Data
+        '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x00', '\x00', '\x00', '\x00',  // Data
+        '\x00', '\x00', '\x00'
     };
-    uint8_t tag_memory_size = sizeof(tag_memory);
+    tag.memory = tag_memory;
+    tag.memory_size = sizeof(tag_memory);
 
-    uint8_t uid[] = {'\x01', '\x02', '\x03', '\xFF'};
-    uint8_t uid_size = sizeof(uid);
+    assert(tag.memory_size == 64);
 
-    nfct_type_2_tag_t tag = {
-        .memory = tag_memory,
-        .memory_size = tag_memory_size
-    };
+    uint8_t nfcid[] = {'\x01', '\x02', '\x03', '\xFF'};
+    
+    initialize_t2t(&tag, true, nfcid, sizeof(nfcid));
 
-    initialize_t2t(&tag, true, uid, uid_size);
     enable_t2t();
+
+    start_event_loop();
 
 }
