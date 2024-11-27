@@ -60,7 +60,7 @@ static void send_ack(void) {
     };
 
     uint8_t tx_frame_config = NFCT_TXD_FRAMECONFIG_SOF_Msk;
-    nrf_nfct_tx_frame_config_set(NRF_NFCT, tx_frame_config);
+    // nrf_nfct_tx_frame_config_set(NRF_NFCT, tx_frame_config);
 
     nrfx_nfct_tx(&data_description, NRF_NFCT_FRAME_DELAY_MODE_WINDOWGRID);
 
