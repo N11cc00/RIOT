@@ -10,7 +10,7 @@
  * @}
  */
 
-#include "t2t.h"
+#include "nrfx/nfct/nrfx_t2t_emulator.h"
 #include <stdint.h>
 #include <event.h>
 #include "panic.h"
