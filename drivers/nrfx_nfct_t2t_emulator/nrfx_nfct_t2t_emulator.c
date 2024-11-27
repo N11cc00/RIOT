@@ -45,6 +45,43 @@ static void configure_autocolres(uint8_t *nfctid1, uint8_t nfctid1_size) {
     nrfx_nfct_autocolres_enable();
 }
 
+static void print_bytes_as_hex(const uint8_t* bytes, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
+        printf("%02X ", bytes[i]);
+    }
+    printf("\n");
+}
+
+static void send_ack(void) {
+    uint8_t buffer[] = { T2T_ACK_RESPONSE };
+    nrfx_nfct_data_desc_t data_description = {
+        .data_size = 1,
+        .p_data = buffer
+    };
+
+    uint8_t tx_frame_config = NFCT_TXD_FRAMECONFIG_SOF_Msk;
+    nrf_nfct_tx_frame_config_set(NRF_NFCT, tx_frame_config);
+
+    nrfx_nfct_tx(&data_description, NRF_NFCT_FRAME_DELAY_MODE_WINDOWGRID);
+
+}
+
+
+static void process_write_command(uint8_t block_address, const uint8_t* bytes) {
+    uint32_t position = block_address * T2T_BLOCK_SIZE;
+    
+    // write 4 bytes to the address
+    tag->memory[position] = bytes[0];
+    tag->memory[position + 1] = bytes[1];
+    tag->memory[position + 2] = bytes[2];
+    tag->memory[position + 3] = bytes[3];
+
+    LOG_DEBUG("Wrote 4 bytes to block number %d", block_address);
+    send_ack();
+}
+
+
+
 // send the data at the given block address
 // always sends 16 bytes
 static void process_read_command(uint8_t block_address) {
@@ -97,8 +134,15 @@ static void parse_received_data(const uint8_t *data, uint32_t size) {
         // nrf_nfct_shorts_disable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK);
         // nrfx_nfct_init_substate_force(NRFX_NFCT_ACTIVE_STATE_SLEEP);
         selected = false;
+    } else if (command == T2T_WRITE_COMMAND) {
+        if (data_size != 5) {
+            LOG_WARNING("Write command does not contain the correct amount of bytes");
+            return;
+        } 
+        process_write_command(*data_buffer, data_buffer + 1);
     } else {
         LOG_WARNING("Unknown command received (0x%02X)\n", command);
+        print_bytes_as_hex(data, data_size);
     }
 }
 
