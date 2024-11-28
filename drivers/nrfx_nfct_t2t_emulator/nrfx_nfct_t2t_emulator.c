@@ -52,20 +52,22 @@ static void print_bytes_as_hex(const uint8_t* bytes, uint32_t size) {
     printf("\n");
 }
 
-static void send_ack(void) {
-    uint8_t buffer[] = { T2T_ACK_RESPONSE };
+static void send_ack_nack(bool ack) {
+    uint8_t buffer[1];
+    if (ack) {
+        LOG_DEBUG("Sending ACK");
+        buffer[0] = T2T_ACK_RESPONSE;
+    } else {
+        LOG_DEBUG("Sending NACK");
+        buffer[0] = T2T_NACK_RESPONSE;
+    }
     nrfx_nfct_data_desc_t data_description = {
         .data_size = 1,
         .p_data = buffer
     };
 
-    uint8_t tx_frame_config = NFCT_TXD_FRAMECONFIG_SOF_Msk;
-    // nrf_nfct_tx_frame_config_set(NRF_NFCT, tx_frame_config);
-
     nrfx_nfct_tx(&data_description, NRF_NFCT_FRAME_DELAY_MODE_WINDOWGRID);
-
 }
-
 
 static void process_write_command(uint8_t block_address, const uint8_t* bytes) {
     uint32_t position = block_address * T2T_BLOCK_SIZE;
@@ -144,6 +146,8 @@ static void parse_received_data(const uint8_t *data, uint32_t size) {
             return;
         } 
         process_write_command(*data_buffer, data_buffer + 1);
+    } else if (command == T2T_SECTOR_SELECT_COMMAND) {
+        send_ack_nack(false);
     } else {
         LOG_WARNING("Unknown command received (0x%02X)\n", command);
         print_bytes_as_hex(data, data_size);
@@ -200,6 +204,16 @@ static void field_lost_handler(event_t * event) {
     LOG_DEBUG("[EVENT] Field lost\n");
     selected = false;
 }
+
+/* user_write to tag {
+post_event_queue(event_queue, write_event);
+}
+
+write_handler(event) {
+    writeBlock();
+}
+
+*/
 
 void print_state(nrf_nfct_tag_state_t state) {
     /*
@@ -325,6 +339,14 @@ void enable_t2t(void) {
 
     nrfx_nfct_enable();
     enabled = true;
+}
+
+void unitialize_t2t(void) {
+    nrfx_nfct_uninit();
+}
+
+void disable_t2t(void) {
+    nrfx_nfct_disable();
 }
 
 void start_event_loop(void) {

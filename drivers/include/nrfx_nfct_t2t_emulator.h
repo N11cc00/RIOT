@@ -19,7 +19,7 @@ typedef enum {
     T2T_READ_COMMAND = 0x30,
     T2T_HALT_COMMAND = 0x50,
     T2T_WRITE_COMMAND = 0xA2,
-    T2T_NACK_COMMAND = 0x00
+    T2T_SECTOR_SELECT_COMMAND = 0XC2
 } t2t_command_t;
 
 typedef enum {
@@ -45,7 +45,13 @@ typedef struct {
 
 void initialize_t2t(nfct_type_2_tag_t *_tag, bool autocolres, uint8_t *nfcid1, uint8_t nfcid1_size);
 
+void uninitialize_t2t();
+
 void enable_t2t(void);
+
+void disable_t2t(void);
+
+
 
 void start_event_loop(void);
 
