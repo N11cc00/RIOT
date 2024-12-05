@@ -179,9 +179,7 @@ static void disable_handler(event_t *event) {
 
 static void uninitialize_handler(event_t *event) {
     nrfx_nfct_uninit();
-    enabled = false;
-    initialized = false;
-    thread_sleep();
+    thread_zombify();
 }
 /*
 static void transmit_handler(event_t * event) {
@@ -380,9 +378,16 @@ void uninitialize_t2t(void) {
         return;
     }
 
+    assert(thread_pid != 0);
     uninitialize_event.handler = uninitialize_handler;
     event_post(&event_queue, &uninitialize_event);
-    
+
+    while (thread_getstatus(thread_pid) != STATUS_ZOMBIE) {}
+
+    thread_kill_zombie(thread_pid);
+
+    enabled = false;
+    initialized = false;  
 }
 
 void disable_t2t(void) {
