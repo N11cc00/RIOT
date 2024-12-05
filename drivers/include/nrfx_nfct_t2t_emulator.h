@@ -31,7 +31,7 @@ typedef struct {
 
 void initialize_t2t(nfc_t2t_t* tag);
 
-void uninitialize_t2t();
+void uninitialize_t2t(void);
 
 void enable_t2t(void);
 

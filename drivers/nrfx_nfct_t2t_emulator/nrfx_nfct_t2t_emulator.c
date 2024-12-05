@@ -14,6 +14,7 @@ static nfct_type_2_tag_t *tag;
 static event_queue_t event_queue;
 
 static uint8_t thread_stack[THREAD_STACKSIZE_MAIN];
+static uint16_t thread_pid = 0;
 
 static bool initialized = false;
 static bool enabled = false;
@@ -31,6 +32,7 @@ static event_t disable_event;
 static event_t enable_event;
 static event_t disable_event;
 static event_t enable_event;
+static event_t uninitialize_event;
 // static t2t_transmit_event_t transmit_event;
 static event_t select_event;
 static event_t end_of_transmission_event;
@@ -175,6 +177,12 @@ static void disable_handler(event_t *event) {
     enabled = false;
 }
 
+static void uninitialize_handler(event_t *event) {
+    nrfx_nfct_uninit();
+    enabled = false;
+    initialized = false;
+    thread_sleep();
+}
 /*
 static void transmit_handler(event_t * event) {
     t2t_transmit_event_t *e = container_of(event, t2t_transmit_event_t, super);
@@ -327,19 +335,26 @@ void initialize_t2t(nfc_t2t_t* _tag) {
     };
 
     nrfx_err_t error = nrfx_nfct_init(&config);
+    initialized = true;
     assert(error == NRFX_SUCCESS);
 
     LOG_DEBUG("Initialization of nfct driver successful!\n");
 
-    if (autocolres) {
-        configure_autocolres(nfcid1, nfcid1_size);
+    // this can be extracted from the t2t struct
+    configure_autocolres(nfcid1, nfcid1_size);
+    /*
     } else {
         nrfx_nfct_autocolres_disable();
     }
-
-    thread_create(thread_stack, sizeof(thread_stack), THREAD_PRIORITY_MAIN - 1, 0, event_loop, &event_queue, "NRFX NFCT Type 2 Tag Emulator Thread");
+    */
 
     nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_FIELDLOST_SENSE_MASK);
+
+    if (thread_pid == 0) {
+        thread_pid = thread_create(thread_stack, sizeof(thread_stack), THREAD_PRIORITY_MAIN - 1, 0, event_loop, &event_queue, "NRFX NFCT Type 2 Tag Emulator Thread");
+    } else {
+        thread_wakeup(pid);
+    }
 }
 
 void enable_t2t(void) {
@@ -356,21 +371,26 @@ void enable_t2t(void) {
     LOG_DEBUG("Enabling T2T\n");
 
     enable_event.handler = enable_handler;
-    event_post(&event_queue, &disable_event);
-    enabled = true;
+    event_post(&event_queue, &enable_event);
 }
 
-void unitialize_t2t(void) {
-    
+void uninitialize_t2t(void) {
+    if (!initialized) {
+        LOG_WARNING("T2T is not initialized\n");
+        return;
+    }
+
+    uninitialize_event.handler = uninitialize_handler;
+    event_post(&event_queue, &uninitialize_event);
     
 }
 
 void disable_t2t(void) {
+    if (!enabled) {
+        LOG_WARNING("T2T is not enabled\n");
+        return;
+    }
+
     disable_event.handler = disable_handler;
     event_post(&event_queue, &e);
-}
-
-void start_event_loop(void) {
-    LOG_DEBUG("Starting event loop.\n");
-    event_loop(&event_queue);
 }
