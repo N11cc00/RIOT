@@ -27,6 +27,8 @@ static const uint32_t buffer_size = BUFFER_SIZE;
 // static nrfx_nfct_data_desc_t data_desc_rx;
 
 static nrfx_t2t_receive_event_t receive_event;
+static event_t disable_event;
+static event_t enable_event;
 // static t2t_transmit_event_t transmit_event;
 static event_t select_event;
 static event_t end_of_transmission_event;
@@ -161,6 +163,16 @@ static void receive_handler(event_t * event) {
     parse_received_data(data_buffer_rx, e->size);
 }
 
+static void enable_handler(event_t *event) {
+    nrfx_nfct_enable();
+    enabled = true;
+}
+
+static void disable_handler(event_t *event) {
+    nrfx_nfct_disable();
+    enabled = false;
+}
+
 /*
 static void transmit_handler(event_t * event) {
     t2t_transmit_event_t *e = container_of(event, t2t_transmit_event_t, super);
@@ -284,7 +296,7 @@ void irq_event_handler(nrfx_nfct_evt_t const * event) {
     }
 }
 
-void initialize_t2t(t2t_t* _tag) {
+void initialize_t2t(nfc_t2t_t* _tag) {
     if (initialized) {
         LOG_WARNING("T2T already initialized\n");
         return;
@@ -341,16 +353,18 @@ void enable_t2t(void) {
 
     LOG_DEBUG("Enabling T2T\n");
 
-    nrfx_nfct_enable();
+    disable_event.handler = enable_handler;
+    event_post(&event_queue, &disable_event);
     enabled = true;
 }
 
 void unitialize_t2t(void) {
-    nrfx_nfct_uninit();
+    
 }
 
 void disable_t2t(void) {
-    nrfx_nfct_disable();
+    disable_event.handler = disable_handler;
+    event_post(&event_queue, &e);
 }
 
 void start_event_loop(void) {
