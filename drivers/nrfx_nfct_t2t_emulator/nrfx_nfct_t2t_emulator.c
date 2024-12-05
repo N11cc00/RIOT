@@ -355,7 +355,7 @@ void enable_t2t(void) {
 
     LOG_DEBUG("Enabling T2T\n");
 
-    disable_event.handler = enable_handler;
+    enable_event.handler = enable_handler;
     event_post(&event_queue, &disable_event);
     enabled = true;
 }
