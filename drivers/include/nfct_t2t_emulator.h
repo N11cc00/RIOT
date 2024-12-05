@@ -17,7 +17,7 @@ typedef enum {
 } t2t_response_t;
 
 typedef struct {
-    void (*initialize) (void);
+    void (*initialize) (t2t_t *t2t);
     void (*enable) (void);
     void (*disable) (void);
     void (*uninit) (void);

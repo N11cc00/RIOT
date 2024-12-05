@@ -3,6 +3,7 @@
 
 #include "kernel_defines.h"
 #include "event.h"
+#include "thread.h"
 
 #if !IS_USED(MODULE_NRFX_NFCT)
 #error Please use the nrfx_nfct module to enable \
@@ -27,7 +28,7 @@ typedef struct {
 } nrfx_t2t_transmit_event_t;
 
 
-void initialize_t2t(nfct_type_2_tag_t *_tag, bool autocolres, uint8_t *nfcid1, uint8_t nfcid1_size);
+void initialize_t2t(t2t_t* tag);
 
 void uninitialize_t2t();
 

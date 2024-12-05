@@ -13,6 +13,8 @@
 static nfct_type_2_tag_t *tag;
 static event_queue_t event_queue;
 
+static uint8_t thread_stack[THREAD_STACKSIZE_MAIN];
+
 static bool initialized = false;
 static bool enabled = false;
 static bool selected = false;
@@ -282,7 +284,7 @@ void irq_event_handler(nrfx_nfct_evt_t const * event) {
     }
 }
 
-void initialize_t2t(nfct_type_2_tag_t *_tag, bool autocolres, uint8_t *nfcid1, uint8_t nfcid1_size) {
+void initialize_t2t(t2t_t* _tag) {
     if (initialized) {
         LOG_WARNING("T2T already initialized\n");
         return;
@@ -320,6 +322,8 @@ void initialize_t2t(nfct_type_2_tag_t *_tag, bool autocolres, uint8_t *nfcid1, u
     } else {
         nrfx_nfct_autocolres_disable();
     }
+
+    thread_create(thread_stack, sizeof(thread_stack), THREAD_PRIORITY_MAIN - 1, 0, event_loop, &event_queue, "NRFX NFCT Type 2 Tag Emulator Thread");
 
     nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_FIELDLOST_SENSE_MASK);
 }
