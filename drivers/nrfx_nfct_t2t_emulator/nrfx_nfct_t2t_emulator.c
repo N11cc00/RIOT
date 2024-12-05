@@ -29,6 +29,8 @@ static const uint32_t buffer_size = BUFFER_SIZE;
 static nrfx_t2t_receive_event_t receive_event;
 static event_t disable_event;
 static event_t enable_event;
+static event_t disable_event;
+static event_t enable_event;
 // static t2t_transmit_event_t transmit_event;
 static event_t select_event;
 static event_t end_of_transmission_event;
@@ -359,6 +361,7 @@ void enable_t2t(void) {
 }
 
 void unitialize_t2t(void) {
+    
     
 }
 
