@@ -379,6 +379,7 @@ void uninitialize_t2t(void) {
     }
 
     assert(thread_pid != 0);
+    assert(thread_pid != 0);
     uninitialize_event.handler = uninitialize_handler;
     event_post(&event_queue, &uninitialize_event);
 
