@@ -12,6 +12,7 @@
 
 
 #include "nrfx_nfct.h"
+#include "t2t.h"
 
 #include "nrfx_nfct_t2t_emulator.h"
 
@@ -28,7 +29,7 @@ typedef struct {
 } nrfx_t2t_transmit_event_t;
 
 
-void initialize_t2t(t2t_t* tag);
+void initialize_t2t(nfc_t2t_t* tag);
 
 void uninitialize_t2t();
 
