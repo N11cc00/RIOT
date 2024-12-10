@@ -4,17 +4,7 @@
 
 // TODO - this looks like it could be done in a nicer way 
 t2t_sn_t t2t_create_default_sn(void){
-    t2t_sn_t sn;
-    sn.SN0 = 0x01;
-    sn.SN1 = 0x02;
-    sn.SN2 = 0x03;
-    sn.SN3 = 0xFF;
-    sn.SN4 = 0x11;
-    sn.SN5 = 0x22;
-    sn.SN6 = 0x33;
-    sn.SN7 = 0x44;
-    sn.SN8 = 0x55;
-    sn.SN9 = 0x66;
+    t2t_sn_t sn = NFC_T2T_4_BYTE_DEFAULT_UID;
     return sn;
 }
 
@@ -22,51 +12,38 @@ static uint8_t * block_no_to_address(uint8_t block_no, nfc_t2t_t *tag){
     return (uint8_t*) &tag->memory[block_no * 4];
 }
 
-t2t_uid_t * t2t_create_4_byte_uid(nfc_t2t_t *tag){
+t2t_uid_t * t2t_create_uid(nfc_t2t_t *tag){
     t2t_sn_t *sn = &tag->sn;
     t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
-    uid->UID0 = sn->SN0;
-    uid->UID1 = sn->SN1;
-    uid->UID2 = sn->SN2;
-    uid->UID3 = sn->SN3;
-    uid->UID4 = uid->UID0 ^ uid->UID1 ^ uid->UID2 ^ uid->UID3;
-    uid->UID5 = 0XFF;
-    uid->UID6 = 0XFF;
-    uid->UID7 = 0XFF;
-    uid->UID8 = 0XFF;
-    uid->UID9 = NFC_T2T_VERSION_1_1; //find a norm to verify this
-    return uid;
-}
-
-t2t_uid_t * t2t_create_7_byte_uid(nfc_t2t_t *tag){
-    t2t_sn_t *sn = &tag->sn;
-    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
-    uid->UID0 = sn->SN0;
-    uid->UID1 = sn->SN1;
-    uid->UID2 = sn->SN2;
-    uid->UID3 = NFC_T2T_CASCADE_TAG_BYTE ^ uid->UID0 ^ uid->UID1 ^ uid->UID2; // BCC0 = CASCADE_TAG_BYTE ^ UID0 ^ UID1 ^ UID2
-    uid->UID4 = sn->SN3;
-    uid->UID5 = sn->SN4;
-    uid->UID6 = sn->SN5;
-    uid->UID7 = sn->SN6;
-    uid->UID8 = uid->UID3 ^ uid->UID4 ^ uid->UID5 ^ uid->UID6; // BCC1 = UID3 ^ UID4 ^ UID5 ^ UID6
-    uid->UID9 = NFC_T2T_VERSION_1_1; //find a norm to verify this
-    return uid;
-}
-
-t2t_uid_t * t2t_create_10_byte_uid(nfc_t2t_t *tag){
-    t2t_sn_t *sn = &tag->sn;
-    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
-    uid->UID0 = sn->SN0;
-    uid->UID1 = sn->SN1;
-    uid->UID2 = sn->SN2;
-    uid->UID3 = sn->SN3;
-    uid->UID4 = sn->SN4;
-    uid->UID5 = sn->SN5;
-    uid->UID6 = sn->SN6;
-    uid->UID7 = sn->SN7;
-    uid->UID8 = sn->SN8;
-    uid->UID9 = sn->SN9;
+    uid->uid_length = sn->sn_length;
+    uid->uid[0] = sn->sn[0];
+    uid->uid[1] = sn->sn[1];
+    uid->uid[2] = sn->sn[2];
+    if(sn->sn_length == NFC_ISO14443A_UID_SINGLE_SIZE){
+        uid->uid[3] = sn->sn[3];
+        uid->uid[4] = uid->uid[0] ^ uid->uid[1] ^ uid->uid[2] ^ uid->uid[3];
+        uid->uid[5] = 0XFF;
+        uid->uid[6] = 0XFF;
+        uid->uid[7] = 0XFF;
+        uid->uid[8] = 0XFF;
+        uid->uid[9] = NFC_T2T_VERSION_1_1; //find a norm to verify this
+    }else if(sn->sn_length == NFC_ISO14443A_UID_DOUBLE_SIZE){
+        uid->uid[3] = NFC_T2T_CASCADE_TAG_BYTE ^ uid->uid[0] ^ uid->uid[1] ^ uid->uid[2];
+        uid->uid[4] = sn->sn[3];
+        uid->uid[5] = sn->sn[4];
+        uid->uid[6] = sn->sn[5];
+        uid->uid[7] = sn->sn[6];
+        uid->uid[8] = uid->uid[4]^ uid->uid[5] ^ uid->uid[6] ^ uid->uid[7];
+        uid->uid[9] = NFC_T2T_VERSION_1_1; //find a norm to verify this
+    }else{
+        uid->uid[3] = sn->sn[3];
+        uid->uid[4] = sn->sn[4];
+        uid->uid[5] = sn->sn[5];
+        uid->uid[6] = sn->sn[6];
+        uid->uid[7] = sn->sn[7];
+        uid->uid[8] = sn->sn[8];
+        uid->uid[9] = sn->sn[9];
+    }
     return uid;
 }
 
@@ -147,7 +124,7 @@ nfc_t2t_t create_type_2_tag(t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t 
         t2t.sn = *sn;
     }
     //create uid
-    t2t.uid = t2t_create_10_byte_uid(&t2t);
+    t2t.uid = t2t_create_uid(&t2t);
     //create lock_bytes
     if(!lb){
         t2t.lb = t2t_create_static_lock_bytes(true, &t2t);
@@ -173,3 +150,73 @@ uint8_t * t2t_read_block(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
     memcpy(buf, block_address, NFC_T2T_READ_RETURN_BYTES);
     return block_address;
 }
+
+
+
+//remove me 
+/*
+t2t_sn_t t2t_create_default_sn(void){
+    t2t_sn_t sn;
+    sn.SN0 = 0x01;
+    sn.SN1 = 0x02;
+    sn.SN2 = 0x03;
+    sn.SN3 = 0xFF;
+    sn.SN4 = 0x11;
+    sn.SN5 = 0x22;
+    sn.SN6 = 0x33;
+    sn.SN7 = 0x44;
+    sn.SN8 = 0x55;
+    sn.SN9 = 0x66;
+    return sn;
+}
+
+
+t2t_uid_t * t2t_create_4_byte_uid(nfc_t2t_t *tag){
+    t2t_sn_t *sn = &tag->sn;
+    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
+    uid->UID0 = sn->SN0;
+    uid->UID1 = sn->SN1;
+    uid->UID2 = sn->SN2;
+    uid->UID3 = sn->SN3;
+    uid->UID4 = uid->UID0 ^ uid->UID1 ^ uid->UID2 ^ uid->UID3;
+    uid->UID5 = 0XFF;
+    uid->UID6 = 0XFF;
+    uid->UID7 = 0XFF;
+    uid->UID8 = 0XFF;
+    uid->UID9 = NFC_T2T_VERSION_1_1; //find a norm to verify this
+    return uid;
+}
+
+
+t2t_uid_t * t2t_create_7_byte_uid(nfc_t2t_t *tag){
+    t2t_sn_t *sn = &tag->sn;
+    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
+    uid->UID0 = sn->SN0;
+    uid->UID1 = sn->SN1;
+    uid->UID2 = sn->SN2;
+    uid->UID3 = NFC_T2T_CASCADE_TAG_BYTE ^ uid->UID0 ^ uid->UID1 ^ uid->UID2; // BCC0 = CASCADE_TAG_BYTE ^ UID0 ^ UID1 ^ UID2
+    uid->UID4 = sn->SN3;
+    uid->UID5 = sn->SN4;
+    uid->UID6 = sn->SN5;
+    uid->UID7 = sn->SN6;
+    uid->UID8 = uid->UID3 ^ uid->UID4 ^ uid->UID5 ^ uid->UID6; // BCC1 = UID3 ^ UID4 ^ UID5 ^ UID6
+    uid->UID9 = NFC_T2T_VERSION_1_1; //find a norm to verify this
+    return uid;
+}
+
+t2t_uid_t * t2t_create_10_byte_uid(nfc_t2t_t *tag){
+    t2t_sn_t *sn = &tag->sn;
+    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
+    uid->UID0 = sn->SN0;
+    uid->UID1 = sn->SN1;
+    uid->UID2 = sn->SN2;
+    uid->UID3 = sn->SN3;
+    uid->UID4 = sn->SN4;
+    uid->UID5 = sn->SN5;
+    uid->UID6 = sn->SN6;
+    uid->UID7 = sn->SN7;
+    uid->UID8 = sn->SN8;
+    uid->UID9 = sn->SN9;
+    return uid;
+}
+*/
