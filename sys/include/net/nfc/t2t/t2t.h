@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "tlv.h"
 
 
 // ISO-1443 specific defines
@@ -48,11 +49,10 @@
 #define NFC_T2T_DEFAULT_MEM_SIZE NFC_T2T_STATIC_MEMORY_SIZE
 #define NFC_T2T_SIZE_UID 10
 #define NFC_T2T_SIZE_STATIC_LOCK_BYTES 2
+#define NFC_T2T_SIZE_STATIC_DATA_AREA 48
+#define NFC_T2T_SIZE_DYNAMIC_LOCK_BYTES 48
 #define NFC_T2T_SIZE_CC 4
 #define NFC_T2T_READ_RETURN_BYTES 16
-
-//TLV
-#define NFC_TLV_NULL_TLV_TYPE 0x00
 
 //selfmade defaults - TODO check how a reader interprets that
 #define NFC_T2T_4_BYTE_DEFAULT_UID {NFC_ISO14443A_UID_SINGLE_SIZE, {0x09, 0x01, 0x02, 0x03}} //ISO-14443-3 6.4.4 Table 10
@@ -114,7 +114,7 @@ typedef struct
 }nfc_t2t_write_command_t;
 
 //functions
-nfc_t2t_t create_type_2_tag(t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                                 uint32_t memory_size, uint8_t *memory); // TODO - change this so it gets a pointer to a nfc_t2t_t instead of creating and returning one
 
 uint8_t t2t_get_size(nfc_t2t_t *tag); //TODO - or remove, is in struct
@@ -122,7 +122,6 @@ bool t2t_write_block(nfc_t2t_t *tag, nfc_t2t_write_command_t data); //TODO
 uint8_t * t2t_read_block(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
 bool t2t_is_writeable(nfc_t2t_t *tag); //TODO
 bool t2t_set_writeable(nfc_t2t_t *tag); //TODO
-bool t2t_add_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv); //TODO
 bool t2t_clear_mem(nfc_t2t_t *tag); //TODO
 
 t2t_uid_t * t2t_create_uid(nfc_t2t_t *tag);
@@ -138,6 +137,11 @@ t2t_static_lock_bytes_t * t2t_set_static_lock_bytes(t2t_static_lock_bytes_t * lo
 #endif
 
 //content 
+int t2t_add_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv); //TODO
+int t2t_create_null_tlv(nfc_tlv_t *tlv);
+int t2t_create_terminator_tlv(nfc_tlv_t *tlv);
+//int t2t_create_ndef_tlv(nfc_tlv_t *tlv, nfc_ndef_msg_t * msg); // needs the NDEF Message
+
 
 
 

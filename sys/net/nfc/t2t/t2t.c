@@ -94,54 +94,52 @@ t2t_cc_t * t2t_set_cc(t2t_cc_t * cap_cont, nfc_t2t_t *tag){
 //TODO - this is a tad stupid, it just writes the tlv to the beginning of the data area
 nfc_tlv_t * create_null_type_tlv(nfc_t2t_t *tag){
     nfc_tlv_t * tlv = (nfc_tlv_t*) &tag->memory[NFC_T2T_SIZE_UID+NFC_T2T_SIZE_STATIC_LOCK_BYTES+NFC_T2T_SIZE_CC];
-    tlv->type = NFC_TLV_NULL_TLV_TYPE;
+    tlv->type = NFC_TLV_TYPE_NULL_TLV;
     return tlv;
 }
 
-nfc_t2t_t create_type_2_tag(t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                             uint32_t memory_size, uint8_t *memory)
 {
-    nfc_t2t_t t2t = {0};
-    t2t.memory = memory;
-    t2t.memory_size = memory_size;
+    tag->memory = memory;
+    tag->memory_size = memory_size;
     // TODO - from here on we know that we need dynamic or static memory layout
     // TODO - add code for dynamic layout
     if(memory_size > 64){ //TODO
-        t2t.dynamic_layout = true;
-        int additional_space_for_lock_bytes = 48;
-        t2t.data_area_size = memory_size-(NFC_T2T_SIZE_UID+NFC_T2T_SIZE_CC+NFC_T2T_SIZE_STATIC_LOCK_BYTES+ additional_space_for_lock_bytes);
+        tag->dynamic_layout = true;
+        tag->data_area_size = memory_size-(NFC_T2T_SIZE_UID+NFC_T2T_SIZE_CC+NFC_T2T_SIZE_STATIC_LOCK_BYTES+NFC_T2T_SIZE_DYNAMIC_LOCK_BYTES);
     }else{
-        t2t.dynamic_layout = false;
-        t2t.data_area_size = memory_size-(NFC_T2T_SIZE_UID+NFC_T2T_SIZE_CC+NFC_T2T_SIZE_STATIC_LOCK_BYTES);
+        tag->dynamic_layout = false;
+        tag->data_area_size = NFC_T2T_SIZE_STATIC_DATA_AREA;
     }
     //initialize to sector 0
-    t2t.current_sector = 0;
+    tag->current_sector = 0;
     
     //create/use sn
     if(!sn){
-        t2t.sn = t2t_create_default_sn();
+        tag->sn = t2t_create_default_sn();
     }else{
-        t2t.sn = *sn;
+        tag->sn = *sn;
     }
     //create uid
-    t2t.uid = t2t_create_uid(&t2t);
+    tag->uid = t2t_create_uid(tag);
     //create lock_bytes
     if(!lb){
-        t2t.lb = t2t_create_static_lock_bytes(true, &t2t);
+        tag->lb = t2t_create_static_lock_bytes(true, tag);
     }else{
-        t2t.lb = t2t_set_static_lock_bytes(lb, &t2t);
+        tag->lb = t2t_set_static_lock_bytes(lb, tag);
     }
     
     //create cc
     if(!cc){
-        t2t.cc = t2t_create_cc(true, true, t2t.data_area_size, &t2t);
+        tag->cc = t2t_create_cc(true, true, tag->data_area_size, tag);
     }else{
-        t2t.cc = t2t_set_cc(cc, &t2t);
+        tag->cc = t2t_set_cc(cc, tag);
     }
 
     //add data - TODO
 
-    return t2t;
+    return 0;
 }
 
 //ambigous name - handles read command and doesn't just read one block
