@@ -24,6 +24,14 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "tlv.h"
+
+
+// ISO-1443 specific defines
+#define NFC_ISO14443A_UID_SINGLE_SIZE 4
+#define	NFC_ISO14443A_UID_DOUBLE_SIZE 7
+#define NFC_ISO14443A_UID_TRIPLE_SIZE 10
+#define NFC_ISO14443A_UID_MAX_LEN NFC_ISO14443A_UID_TRIPLE_SIZE
 
 // NFC specific constants
 #define NFC_T2T_CASCADE_TAG_BYTE 0x88
@@ -41,41 +49,27 @@
 #define NFC_T2T_DEFAULT_MEM_SIZE NFC_T2T_STATIC_MEMORY_SIZE
 #define NFC_T2T_SIZE_UID 10
 #define NFC_T2T_SIZE_STATIC_LOCK_BYTES 2
+#define NFC_T2T_SIZE_STATIC_DATA_AREA 48
+#define NFC_T2T_SIZE_DYNAMIC_LOCK_BYTES 48
 #define NFC_T2T_SIZE_CC 4
 #define NFC_T2T_READ_RETURN_BYTES 16
 
-//TLV
-#define NFC_TLV_NULL_TLV_TYPE 0x00
+//selfmade defaults - TODO check how a reader interprets that
+#define NFC_T2T_4_BYTE_DEFAULT_UID {NFC_ISO14443A_UID_SINGLE_SIZE, {0x09, 0x01, 0x02, 0x03}} //ISO-14443-3 6.4.4 Table 10
+#define NFC_T2T_10_BYTE_DEFAULT_UID {NFC_ISO14443A_UID_TRIPLE_SIZE, {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09}} //ISO-14443-3 6.4.4 Table 10
 
 // typedefs
 
+/* UIDs and meaning defined in ISO-14443-3 6.4.4, */
 typedef struct {
-    uint8_t UID0;
-    uint8_t UID1;
-    uint8_t UID2;
-    uint8_t UID3;
-    uint8_t UID4; 
-    uint8_t UID5; 
-    uint8_t UID6; 
-    uint8_t UID7;
-    uint8_t UID8;
-    uint8_t UID9;
-} t2t_uid_t; // 10 byte UID
-
+    uint8_t uid_length;
+    uint8_t uid[NFC_ISO14443A_UID_MAX_LEN];
+} t2t_uid_t;
 
 typedef struct {
-    uint8_t SN0;
-    uint8_t SN1;
-    uint8_t SN2;
-    uint8_t SN3;
-    uint8_t SN4;
-    uint8_t SN5;
-    uint8_t SN6;
-    uint8_t SN7;
-    uint8_t SN8;
-    uint8_t SN9;
-} t2t_sn_t; // 10 Byte SN
-/* TODO - find standard that says what UIDs/SNs for T2Ts*/
+    uint8_t sn_length;
+    uint8_t sn[NFC_ISO14443A_UID_MAX_LEN];
+} t2t_sn_t;
 
 typedef struct {
     uint8_t lock_byte1;
@@ -120,20 +114,17 @@ typedef struct
 }nfc_t2t_write_command_t;
 
 //functions
-nfc_t2t_t create_type_2_tag(t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
-                                uint32_t memory_size, uint8_t *memory);
+int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+                                uint32_t memory_size, uint8_t *memory); // TODO - change this so it gets a pointer to a nfc_t2t_t instead of creating and returning one
 
 uint8_t t2t_get_size(nfc_t2t_t *tag); //TODO - or remove, is in struct
 bool t2t_write_block(nfc_t2t_t *tag, nfc_t2t_write_command_t data); //TODO
 uint8_t * t2t_read_block(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
 bool t2t_is_writeable(nfc_t2t_t *tag); //TODO
 bool t2t_set_writeable(nfc_t2t_t *tag); //TODO
-bool t2t_add_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv); //TODO
 bool t2t_clear_mem(nfc_t2t_t *tag); //TODO
 
-t2t_uid_t * t2t_create_4_byte_uid(nfc_t2t_t *sn);
-t2t_uid_t * t2t_create_7_byte_uid(nfc_t2t_t *sn);
-t2t_uid_t * t2t_create_10_byte_uid(nfc_t2t_t *tag);
+t2t_uid_t * t2t_create_uid(nfc_t2t_t *tag);
 
 t2t_sn_t t2t_create_default_sn(void);
 //t2t_sn_t t2t_create_random_sn(uint8_t length);
@@ -145,11 +136,38 @@ t2t_static_lock_bytes_t * t2t_create_static_lock_bytes(bool read_write, nfc_t2t_
 t2t_static_lock_bytes_t * t2t_set_static_lock_bytes(t2t_static_lock_bytes_t * lock_bytes, nfc_t2t_t *tag);
 #endif
 
+//content 
+int t2t_add_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv); //TODO
+int t2t_create_null_tlv(nfc_tlv_t *tlv);
+int t2t_create_terminator_tlv(nfc_tlv_t *tlv);
+//int t2t_create_ndef_tlv(nfc_tlv_t *tlv, nfc_ndef_msg_t * msg); // needs the NDEF Message
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //Remove me
+/*
 
-/*typedef struct {
+t2t_uid_t * t2t_create_4_byte_uid(nfc_t2t_t *sn);
+t2t_uid_t * t2t_create_7_byte_uid(nfc_t2t_t *sn);
+t2t_uid_t * t2t_create_10_byte_uid(nfc_t2t_t *tag);
+
+
+typedef struct {
     uint8_t SN0;
     uint8_t SN1;
     uint8_t SN2;
@@ -204,4 +222,30 @@ typedef struct {
     uint8_t UID8;
     uint8_t UID9;
 } t2t_10_B_uid_t; // 10 byte UID
+
+typedef struct {
+    uint8_t UID0;
+    uint8_t UID1;
+    uint8_t UID2;
+    uint8_t UID3;
+    uint8_t UID4;
+    uint8_t UID5;
+    uint8_t UID6;
+    uint8_t UID7;
+    uint8_t UID8;
+    uint8_t UID9;
+} t2t_uid_t; // 10 byte UID
+
+typedef struct {
+    uint8_t SN0;
+    uint8_t SN1;
+    uint8_t SN2;
+    uint8_t SN3;
+    uint8_t SN4;
+    uint8_t SN5;
+    uint8_t SN6;
+    uint8_t SN7;
+    uint8_t SN8;
+    uint8_t SN9;
+} t2t_sn_t; // 10 Byte SN
 */
