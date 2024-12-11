@@ -7,6 +7,9 @@
 #define NFC_TLV_TYPE_PROPRIETARY 0x04
 #define NFC_TLV_TYPE_TERMINATOR 0x05
 
+#define NFC_TLV_SIZE_TYPE_NULL_TLV 0
+#define NFC_TLV_SIZE_TYPE_TERMINATOR_TLV 0
+
 typedef struct {
     uint8_t type;
     /*
@@ -15,5 +18,6 @@ typedef struct {
         uint8_t length[3];
     );*/
     uint16_t length;
-    uint8_t *start_of_block;
-} nfc_tlv2_t;
+    void * data;
+    uint8_t *start_of_block_in_tag;
+} nfc_tlv_t;

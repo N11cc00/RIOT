@@ -50,6 +50,7 @@
 #define NFC_T2T_SIZE_UID 10
 #define NFC_T2T_SIZE_STATIC_LOCK_BYTES 2
 #define NFC_T2T_SIZE_STATIC_DATA_AREA 48
+#define NFC_T2T_START_STATIC_DATA_AREA NFC_T2T_SIZE_UID + NFC_T2T_SIZE_STATIC_LOCK_BYTES + NFC_T2T_SIZE_CC
 #define NFC_T2T_SIZE_DYNAMIC_LOCK_BYTES 48
 #define NFC_T2T_SIZE_CC 4
 #define NFC_T2T_READ_RETURN_BYTES 16
@@ -62,7 +63,6 @@
 
 /* UIDs and meaning defined in ISO-14443-3 6.4.4, */
 typedef struct {
-    uint8_t uid_length;
     uint8_t uid[NFC_ISO14443A_UID_MAX_LEN];
 } t2t_uid_t;
 
@@ -83,15 +83,11 @@ typedef struct {
     uint8_t read_write_access; // 4 bit read, 4 bit write,
 } t2t_cc_t;
 
+// just as a concept
 typedef struct {
-    uint8_t type;
-    union{
-        uint8_t length_one_B;
-        uint8_t length_three_B[3];
-    };
-    uint8_t *value;
-} nfc_tlv_t;
-    
+    uint32_t size;
+    uint8_t *start_address;
+}nfc_ndef_msg_t;
 
 typedef struct{
     uint8_t *memory;
@@ -102,8 +98,9 @@ typedef struct{
     t2t_uid_t *uid;
     t2t_static_lock_bytes_t *lb;
     t2t_cc_t *cc;
-    uint8_t data_area_size;
-    nfc_tlv_t *data_area;
+    uint32_t data_area_size;
+    uint8_t *data_area_start;
+    uint8_t *data_area_cursor;
     // TODO t2t_dynamic_t *extra;
 } nfc_t2t_t;
 
@@ -137,11 +134,14 @@ t2t_static_lock_bytes_t * t2t_set_static_lock_bytes(t2t_static_lock_bytes_t * lo
 #endif
 
 //content 
+int t2t_add_ndef_msg(nfc_t2t_t *tag, nfc_ndef_msg_t *msg);
 int t2t_add_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv); //TODO
-int t2t_create_null_tlv(nfc_tlv_t *tlv);
-int t2t_create_terminator_tlv(nfc_tlv_t *tlv);
+int t2t_create_null_tlv(nfc_t2t_t *tag);
+//int t2t_create_terminator_tlv(nfc_tlv_t *tlv);
 //int t2t_create_ndef_tlv(nfc_tlv_t *tlv, nfc_ndef_msg_t * msg); // needs the NDEF Message
+int t2t_add_ndef_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv, nfc_ndef_msg_t *msg);
 
+void t2t_dump_tag_memory(nfc_t2t_t *tag);
 
 
 
