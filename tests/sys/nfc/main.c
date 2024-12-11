@@ -1,5 +1,6 @@
 //#include "../../../sys/include/net/nfc/t2t/t2t.h"
 #include "net/nfc/t2t/t2t.h"
+#include "net/nfc/nfct.h"
 #include <stddef.h>
 #include <stdio.h>
 
