@@ -2,7 +2,7 @@
 #define NFCT_T2T_EMULATOR_H
 
 #include <stdint.h>
-#include "t2t.h"
+#include "net/nfc/t2t/t2t.h"
 
 typedef enum {
     T2T_READ_COMMAND = 0x30,
@@ -17,7 +17,7 @@ typedef enum {
 } t2t_response_t;
 
 typedef struct {
-    void (*initialize) (t2t_t *t2t);
+    void (*initialize) (nfc_t2t_t *t2t);
     void (*enable) (void);
     void (*disable) (void);
     void (*uninit) (void);

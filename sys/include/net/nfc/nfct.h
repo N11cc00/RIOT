@@ -3,7 +3,7 @@
 
 #include "ndef.h"
 #include "nfct_t2t_emulator.h"
-#include "t2t.h"
+#include "net/nfc/t2t/t2t.h"
 
 typedef enum {
     TYPE_2_TAG,
@@ -23,8 +23,8 @@ nfct_t2t_emulator_t default_t2t_emulator_dev = {
 
 void create_tag(nfct_t2t_emulator_t* dev, const ndef_t* message, tag_type_t tag_type);
 
-void delete_tag();
+void delete_tag(void);
 
-void create_tag_with_ndef();
+void create_tag_with_ndef(void);
 
 #endif

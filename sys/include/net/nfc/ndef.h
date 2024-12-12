@@ -1,21 +1,43 @@
 #ifndef NDEF_H
 #define NDEF_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
+#define NDEF_RECORD_HEADER_SIZE 1
+#define NDEF_RECORD_TYPE_LENGTH_SIZE 1
+#define NDEF_RECORD_ID_LENGTH_SIZE 1
+#define NDEF_RECORD_SHORT_PAYLOAD_LENGTH_SIZE 1
+#define NDEF_RECORD_LONG_PAYLOAD_LENGTH_SIZE 4
+
+#define MAX_NDEF_RECORD_COUNT 10
+// #define NDEF_MEMORY_SIZE 1024
+
+
+
 typedef struct {
-    ndef_record_tnf_t tnf;
-    uint8_t type_length;
-    uint8_t const *type;
-
-    uint8_t id_length;
-    uint8_t const *id;
-
-    uint32_t payload_length;
-    void const *payload;
-} ndef_record_t;
+	uint8_t *memory;
+	uint32_t memory_size;
+	uint32_t cursor;
+} ndef_buffer_t;
 
 typedef struct {
+	uint8_t *start;
 
-} ndef_text_record_t;
+    uint8_t *header;
+
+    uint8_t *type_length;
+    uint8_t *type;
+
+    uint8_t *id_length;
+    uint8_t *id;
+
+	uint8_t payload_length_size;
+    uint8_t *payload_length;
+
+    uint8_t *payload;
+} ndef_record_desc_t;
+
 
 typedef enum {
 	/** The value indicates that there is no type or payload. */
@@ -46,10 +68,69 @@ typedef enum {
 } ndef_record_location_t;
 
 typedef struct {
-    ndef_record_t *records;
-    uint32_t record_count; 
+	ndef_buffer_t buffer;
+    ndef_record_desc_t records[MAX_NDEF_RECORD_COUNT];
+    uint32_t record_count;
 } ndef_t;
 
-int encode_ndef_message(ndef_t const *message, uint8_t *buffer, uint32_t const len);
+
+/**
+ * @brief Pretty prints the NDEF message in human readable format.
+ * 
+ * @param[in] ndef NDEF message to print
+ */
+void pretty_print_ndef(ndef_t const *ndef);
+
+
+/**
+ * @brief Writes the data buffer to the given NDEF message. 
+ * 
+ * @note This writes the data of the given buffer and
+ * shifts the cursor of the NDEF buffer by the length of the data.
+ * 
+ * @param[in,out] ndef The NDEF message that gets the data written to its memory
+ * @param[in] data Data to write
+ * @param[in] data_length Length of the data
+ * @return The pointer to the memory cursor before the write operation, NULL if the data is too long
+ * for the remaining buffer size.
+ */
+uint8_t* write_to_ndef_buffer(ndef_t* ndef, uint8_t const *data, uint32_t data_length);
+
+/**
+ * @brief Initializes the given NDEF message with the given buffer and buffer size.
+ * 
+ * @note The buffer needs to be allocated by the user and has to stay valid for the entire lifetime
+ * of the NDEF message struct.
+ * 
+ * @param[out] message Message to initilaize
+ * @param[in] buffer Empty buffer that is used by the NDEF message
+ * @param[in] buffer_size Buffer size
+ */
+void initialize_ndef_message(ndef_t *message, uint8_t *buffer, uint32_t buffer_size);
+
+/**
+ * @brief 
+ * 
+ * @param message 
+ * @param type 
+ * @param type_length 
+ * @param id 
+ * @param id_length 
+ * @param payload 
+ * @param payload_length 
+ * @param mb 
+ * @param me 
+ * @param cf 
+ * @param sr 
+ * @param il 
+ * @param tnf 
+ * @return Returns 0 if the record was added successfully, a negative error code otherwise.
+ */
+int add_ndef_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, bool mb, bool me, bool cf, bool sr, bool il, ndef_record_tnf_t tnf);
+
+
+// int encode_ndef_message(ndef_t const *message, uint8_t *buffer, uint32_t const len);
+
+// int create_ndef_message_with_text(ndef_t *message, char const *text, uint32_t text_length);
 
 #endif

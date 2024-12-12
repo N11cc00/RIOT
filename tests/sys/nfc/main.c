@@ -3,8 +3,35 @@
 #include "net/nfc/nfct.h"
 #include <stddef.h>
 #include <stdio.h>
+#include "net/nfc/ndef.h"
+#include "net/nfc/ndef_text_payload.h"
 
-int main(void){
+static void print_ndef_as_hex(ndef_t const *message) {
+    printf("NDEF message size: %d\n", message->buffer.cursor);
+    for (uint32_t i = 0; i < message->buffer.cursor; ++i) {
+        if (i % 4 == 0 && i != 0) {
+            printf("\n");
+        }
+        printf("0x%02x ", message->buffer.memory[i]);
+    }
+    printf("\n\n");
+}
+
+static void print_length_field(uint8_t* bytes, bool sr) {
+    if (sr) {
+        printf("Length field: ");
+        printf("0x%02x\n", bytes[0]);
+        return;
+    } else {
+        printf("Length field: ");
+        for (int i = 0; i < 4; ++i) {
+            printf("0x%02x ", bytes[i]);
+        }
+        printf("\n");
+    }
+}
+
+static bool test_t2t(void) {
     uint8_t tag_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     //uint8_t ndef_message_content[] = {'H','e','l','l','o',' ','W','o','r','l','d'};
     uint8_t msg_content[] = {'\xD1', '\x01', '\x08', '\x54', '\x02', 'e', 'n', 'H', 'e', 'l', 'l', 'o'};
@@ -34,6 +61,34 @@ int main(void){
     t2t_add_ndef_msg(&tag, &ndef_msg);
     printf("added ndef\n");
     t2t_dump_tag_memory(&tag);
-
+    return true;
 }
 
+static bool test_ndef_text_record(void) {
+    ndef_t message;
+    uint8_t buffer[1024];
+
+    initialize_ndef_message(&message, buffer, 1024);
+    add_ndef_text_record(&message, "Hello World", 11, "en", 2, UTF8);
+    print_length_field(message.records[0].payload_length, message.records[0].payload_length_size == 1);
+    print_ndef_as_hex(&message);
+    pretty_print_ndef(&message);
+    return true;
+}
+
+static bool test_two_ndef_text_records(void) {
+    ndef_t message;
+    uint8_t buffer[1024];
+    initialize_ndef_message(&message, buffer, 1024);
+    add_ndef_text_record(&message, "Hello World", 11, "en", 2, UTF8);
+    add_ndef_text_record(&message, "Hej Verden", 10, "da", 2, UTF8);
+    pretty_print_ndef(&message);
+    return true;
+}
+
+int main(void){
+    test_t2t();
+    test_ndef_text_record();
+    test_two_ndef_text_records();
+
+}
