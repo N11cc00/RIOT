@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "tlv.h"
+#include "net/nfc/ndef.h"
 
 
 // ISO-1443 specific defines
@@ -82,13 +83,6 @@ typedef struct {
     uint8_t read_write_access; // 4 bit read, 4 bit write,
 } t2t_cc_t;
 
-// just as a concept
-typedef struct {
-    uint32_t size;
-    uint8_t *start_address;
-}nfc_ndef_msg_t;
-
-
 typedef struct{
     bool default_lock_bits_set;
     uint8_t *start_default_lock_bits;
@@ -122,10 +116,10 @@ typedef struct
 int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                                 uint32_t memory_size, uint8_t *memory);
 int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
-                                uint32_t memory_size, uint8_t *memory, nfc_ndef_msg_t *msg);
+                                uint32_t memory_size, uint8_t *memory, ndef_t *msg);
 
 uint8_t t2t_get_size(nfc_t2t_t *tag); //TODO - or remove, is in struct
-int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
+int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t const *buf);
 int t2t_handle_read(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
 bool t2t_is_writeable(nfc_t2t_t *tag); //TODO
 bool t2t_set_writeable(nfc_t2t_t *tag); //TODO
@@ -145,12 +139,12 @@ t2t_static_lock_bytes_t * t2t_set_static_lock_bytes(t2t_static_lock_bytes_t * lo
 #endif
 
 //content 
-int t2t_add_ndef_msg(nfc_t2t_t *tag, nfc_ndef_msg_t *msg);
+int t2t_add_ndef_msg(nfc_t2t_t *tag, ndef_t const *msg);
 int t2t_add_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv); //TODO
 int t2t_create_null_tlv(nfc_t2t_t *tag);
 //int t2t_create_terminator_tlv(nfc_tlv_t *tlv);
 //int t2t_create_ndef_tlv(nfc_tlv_t *tlv, nfc_ndef_msg_t * msg); // needs the NDEF Message
-int t2t_add_ndef_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv, nfc_ndef_msg_t *msg);
+int t2t_add_ndef_tlv(nfc_t2t_t *tag, nfc_tlv_t *tlv, ndef_t *msg);
 
 void t2t_dump_tag_memory(nfc_t2t_t *tag);
 

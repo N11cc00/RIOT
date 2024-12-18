@@ -1,16 +1,15 @@
-#include "include/nrfx_nfct_t2t_emulator_params.h"
 #include "nrfx_nfct_t2t_emulator.h"
 
-// requires the nrfx package nrfx
 #include "nrfx_nfct.h"
 #include "container.h"
 #include "log.h"
 #include "nfct_t2t_emulator.h"
 #include "net/nfc/t2t/t2t.h"
+#include "event.h"
 
 #define BUFFER_SIZE 256
 
-static nfct_type_2_tag_t *tag;
+static nfc_t2t_t *tag;
 static event_queue_t event_queue;
 
 static char thread_stack[THREAD_STACKSIZE_MAIN];
@@ -77,15 +76,17 @@ static void send_ack_nack(bool ack) {
     nrfx_nfct_tx(&data_description, NRF_NFCT_FRAME_DELAY_MODE_WINDOWGRID);
 }
 
-static void process_write_command(uint8_t block_address, const uint8_t* bytes) {
+static void process_write_command(uint8_t block_no, uint8_t const *bytes) {
     
     // write 4 bytes to the address
 
     // print_bytes_as_hex(bytes, 4);
-    t2t_write_block(tag, block_address, bytes);
+    if (!t2t_handle_write(tag, block_no, bytes)) {
+        send_ack_nack(false);
+    }
 
-    LOG_DEBUG("Wrote 4 bytes to block number %d", block_address);
-    send_ack();
+    LOG_DEBUG("Wrote 4 bytes to block number %d", block_no);
+    send_ack_nack(true);
     print_bytes_as_hex(tag->memory, tag->memory_size);
     
 }
@@ -105,20 +106,7 @@ static void* nrfx_event_loop(void *arg) {
 // send the data at the given block address
 // always sends 16 bytes
 static void process_read_command(uint8_t block_address) {
-    uint8_t start_block = block_address;
-    uint8_t end_block = block_address + 4;
-
-    uint8_t start_byte = start_block * NFC_T2T_BLOCK_SIZE;
-    uint8_t end_byte = end_block * T2T_BLOCK_SIZE;
-
-
-    assert(end_byte - start_byte == 16);
-
-    // Copy 16 bytes of data from the tag's memory to the response buffer
-    // unless there are no more bytes left in the tag's memory
-    for (uint32_t i = 0; i < 16; i++) {
-        data_buffer_tx[i] = tag->memory[start_byte + i];
-    }
+    t2t_handle_read(tag, block_address, data_buffer_tx);
 
     // Set up the data descriptor for the response
     nrfx_nfct_data_desc_t data_desc_tx = {
@@ -323,7 +311,7 @@ void irq_event_handler(nrfx_nfct_evt_t const * event) {
     }
 }
 
-void initialize_t2t(nfct_type_2_tag_t* _tag) {
+void initialize_t2t(nfc_t2t_t *_tag) {
     if (initialized) {
         LOG_WARNING("T2T already initialized\n");
         return;

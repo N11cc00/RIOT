@@ -75,7 +75,7 @@ size_t get_ndef_size(ndef_t const *ndef) {
 void pretty_print_ndef(ndef_t const *ndef) {
     printf("----------------\n");
     printf("NDEF Printing\n");
-    printf("NDEF message records: %d\n", ndef->record_count);
+    printf("NDEF message records: %lu\n", ndef->record_count);
     printf("\n");
     for (size_t i = 0; i < (size_t) ndef->record_count; ++i) {
         ndef_record_desc_t record = ndef->records[i];
@@ -89,9 +89,9 @@ void pretty_print_ndef(ndef_t const *ndef) {
         }
         printf("\n");
 
-        printf("Payload length size: %d\n", record.payload_length_size); 
+        printf("Payload length size: %u\n", record.payload_length_size); 
         uint32_t payload_length = convert_payload_length_to_uint32(record.payload_length, record.payload_length_size);
-        printf("Payload length: %d\n", payload_length);
+        printf("Payload length: %lu\n", payload_length);
         printf("Payload: ");
         for (size_t j = 0; j < (size_t) payload_length; ++j) {
             printf("0x%02x ", record.payload[j]);

@@ -1,4 +1,5 @@
 #include "net/nfc/t2t/t2t.h"
+#include "net/nfc/ndef.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -187,7 +188,7 @@ int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_loc
 }
 
 int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
-                                uint32_t memory_size, uint8_t *memory, nfc_ndef_msg_t *msg){
+                                uint32_t memory_size, uint8_t *memory, ndef_t *msg){
     int error = 0;
     error = create_type_2_tag(tag, sn, cc, lb, memory_size, memory);
     if(error != 0) return error;
@@ -204,7 +205,7 @@ int t2t_handle_read(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
     return 0;
 }
 
-int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
+int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t const *buf){
     if(!isWriteable(tag)){
         return -1;
     }
@@ -253,15 +254,15 @@ int t2t_create_ndef_tlv(nfc_t2t_t *tag, uint16_t length){
     return pos; //either 1 or 4
 }
 
-int t2t_add_ndef_msg(nfc_t2t_t *tag, nfc_ndef_msg_t *msg){
+int t2t_add_ndef_msg(nfc_t2t_t *tag, ndef_t const *msg){
     int tlv_header_size = 0;
-    tlv_header_size = t2t_create_ndef_tlv(tag, msg->size);
+    tlv_header_size = t2t_create_ndef_tlv(tag, msg->buffer.cursor);
     if (tlv_header_size < 0){
         return -1;
     }
     //write msg into tag mem
-    memcpy(tag->data_area_cursor,msg->start_address,msg->size);
-    tag->data_area_cursor += msg->size;
+    memcpy(tag->data_area_cursor, msg->buffer.memory,msg->buffer.cursor);
+    tag->data_area_cursor += msg->buffer.cursor;
     //add terminator
     t2t_create_terminator_tlv(tag);
     return 0;

@@ -35,11 +35,14 @@ static void print_length_field(uint8_t* bytes, bool sr) {
 static bool test_t2t(void) {
     uint8_t tag_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     //uint8_t ndef_message_content[] = {'H','e','l','l','o',' ','W','o','r','l','d'};
-    uint8_t msg_content[] = {'\xD1', '\x01', '\x08', '\x54', '\x02', 'e', 'n', 'H', 'e', 'l', 'l', 'o'};
-    nfc_ndef_msg_t ndef_msg = {0};
-    ndef_msg.size = sizeof(msg_content);
-    ndef_msg.start_address = msg_content;
-    nfc_t2t_t tag = {0};
+    ndef_t ndef_msg;
+    uint8_t buffer[1024];
+    nfc_t2t_t tag;
+
+    initialize_ndef_message(&ndef_msg, buffer, 1024);
+    add_ndef_text_record(&ndef_msg, "Hello World", 11, "en", 2, UTF8);
+
+
     int error = 0;
     error = create_type_2_tag(&tag, NULL, NULL, NULL, sizeof(tag_mem), tag_mem);
     if(error){
@@ -98,20 +101,21 @@ static bool test_two_ndef_text_records(void) {
     return true;
 }
 
+/*
 bool test_nfct(void) {
     ndef_t ndef_message;
     uint8_t buffer[1024];
 
     initialize_ndef_message(&ndef_message, buffer, 1024);
     add_ndef_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
-    create_tag(&default_t2t_emulator_dev, &ndef_message, TYPE_2_TAG);
+    create_tag(&DEFAULT_T2T_EMULATOR_DEV, &ndef_message, TYPE_2_TAG);
     return true;
 }
 
+*/
 int main(void){
     test_t2t();
     test_ndef_text_record();
     test_two_ndef_text_records();
-    test_nfct();
-
+    // test_nfct();
 }

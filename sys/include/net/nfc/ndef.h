@@ -23,7 +23,8 @@ typedef struct {
 	/* size of the memory that can't be exceeded by the cursor */
 	uint32_t memory_size;
 
-	/* points to the last byte + 1 of the memory array */
+	/* index to the last byte + 1 of @ref memory, so it basically is the length
+	of data */
 	uint32_t cursor;
 } ndef_buffer_t;
 
