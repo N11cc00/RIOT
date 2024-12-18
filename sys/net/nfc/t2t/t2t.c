@@ -2,7 +2,55 @@
 #include <stdio.h>
 #include <string.h>
 
-// TODO - this looks like it could be done in a nicer way 
+/**
+ * @brief Sets dynamic lock bits and decreases data area.
+ *
+ * Sets the dynamic lock bits to 0x0 at the end of the data area as defined
+ * for the default behavior in Type 2 Tag Specification 2.2.2
+ *
+ * @param tag the type 2 tag to be altered
+ * @return 0 in case of success, negative number in case of problems
+ */
+static int create_default_dynamic_memory_layout(nfc_t2t_t *tag, bool read_only){
+// calculate size of dynamic lock bytes and amnt of lock bits
+    if(tag->memory_size <= NFC_T2T_STATIC_MEMORY_SIZE){
+        return -1;
+    }
+    uint32_t dyn_lock_bytes;
+    uint32_t dyn_lock_bits; // only needed if setting to 1 needed
+    if(((tag->data_area_size - NFC_T2T_SIZE_STATIC_DATA_AREA) % 8) > 0){
+        dyn_lock_bytes= ((tag->data_area_size - 48) / 64) + 1;
+        dyn_lock_bits= ((tag->data_area_size - 48) / 8) + 1;  
+    }else{
+        dyn_lock_bytes = (tag->data_area_size - 48) / 64;
+        dyn_lock_bits = (tag->data_area_size - 48) / 8;
+    }
+    
+// calculate position of dynamic lock bits -> new end of user usable data area
+    uint32_t start_lock_bits = tag->data_area_size - 1 - dyn_lock_bytes;
+// write lock control tlv to data area - apparently unnecessary for default
+// write lock bits to data area
+    for(uint32_t i = 0; i < dyn_lock_bytes; i++){
+        if(read_only){
+            tag->data_area_start[start_lock_bits + i] = 0xFF; //initiate to read_only
+        }else{
+            tag->data_area_start[start_lock_bits + i] = 0x00; //initiate to read_write
+        } 
+    }
+    // in case last byte is just partially filled with lock bits
+    if(read_only && dyn_lock_bits % 8 != 0){
+        // only as many bits shall be set to 1 as there are lock bits - remaining bits to 0x0
+        // e.g. 70 Byte data area -> 22 byte dyn -> ceil(22/8) = 3bit -> 1110 0000 --> 1111 1111 << (8-3=5) 
+        tag->data_area_start[start_lock_bits + dyn_lock_bytes] = (uint8_t) 0xFF << (8-(dyn_lock_bits %8));
+    }
+    //tag->data_area_size = new_data_area_size;
+    return 0;
+}
+
+static bool isWriteable(nfc_t2t_t *tag){
+    return (tag->cc->read_write_access == (uint8_t) 0x00);
+}
+
 t2t_sn_t t2t_create_default_sn(void){
     t2t_sn_t sn = NFC_T2T_4_BYTE_DEFAULT_UID;
     return sn;
@@ -100,12 +148,15 @@ int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_loc
     // TODO - add code for dynamic layout
     if(memory_size > 64){ //TODO
         tag->dynamic_layout = true;
-        tag->data_area_size = memory_size-(NFC_T2T_SIZE_UID+NFC_T2T_SIZE_CC+NFC_T2T_SIZE_STATIC_LOCK_BYTES+NFC_T2T_SIZE_DYNAMIC_LOCK_BYTES);
+        tag->data_area_size = memory_size-(NFC_T2T_SIZE_UID+NFC_T2T_SIZE_CC+NFC_T2T_SIZE_STATIC_LOCK_BYTES);
     }else{
         tag->dynamic_layout = false;
         tag->data_area_size = NFC_T2T_SIZE_STATIC_DATA_AREA;
-        tag->data_area_start = memory + NFC_T2T_START_STATIC_DATA_AREA;
-        tag->data_area_cursor = tag->data_area_start;
+    }
+    tag->data_area_start = memory + NFC_T2T_START_STATIC_DATA_AREA;
+    tag->data_area_cursor = tag->data_area_start;
+    if(tag->dynamic_layout){
+        create_default_dynamic_memory_layout(tag, false); //sets dynamic lock bits at end of data area and lowers data_area_size
     }
     //initialize to sector 0
     tag->current_sector = 0;
@@ -132,22 +183,38 @@ int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_loc
         tag->cc = t2t_set_cc(cc, tag);
     }
 
-    //add data - TODO
-
     return 0;
 }
 
+int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+                                uint32_t memory_size, uint8_t *memory, nfc_ndef_msg_t *msg){
+    int error = 0;
+    error = create_type_2_tag(tag, sn, cc, lb, memory_size, memory);
+    if(error != 0) return error;
+    error = t2t_add_ndef_msg(tag, msg);
+
+    return error;
+
+}
+
 //ambigous name - handles read command and doesn't just read one block
-uint8_t * t2t_read_block(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
+int t2t_handle_read(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
     uint8_t *block_address = block_no_to_address(block_no, tag);
     memcpy(buf, block_address, NFC_T2T_READ_RETURN_BYTES);
-    return block_address;
+    return 0;
+}
+
+int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
+    if(!isWriteable(tag)){
+        return -1;
+    }
+    uint8_t *block_address = block_no_to_address(block_no, tag);
+    memcpy(block_address, buf, NFC_T2T_BLOCK_SIZE);
+    return 0;
+    
 }
 
 
-/*TODO - is there a general preference to handle such functions with 
-- ENUMs and one function or
-- multiple functions, each with descriptive names*/
 int t2t_create_null_tlv(nfc_t2t_t *tag){
     tag->data_area_cursor[0] = NFC_TLV_TYPE_NULL_TLV;
     tag->data_area_cursor++;
@@ -175,13 +242,10 @@ int write_tlv_length(uint8_t *buf, uint16_t length){
 }
 
 int t2t_create_ndef_tlv(nfc_t2t_t *tag, uint16_t length){
-    printf("enter create ndef_tlv\n");
     uint8_t pos = 0;
     tag->data_area_cursor[pos] = NFC_TLV_TYPE_NDEF_MSG;
-    printf("wrote tlv type\n");
     pos++;
     pos += write_tlv_length(&tag->data_area_cursor[pos], length);
-    printf("wrote length to tag\n");
     if(pos < 2){ // write_tlv returns -1 if smth went wrong
         return -1;
     }
@@ -189,14 +253,9 @@ int t2t_create_ndef_tlv(nfc_t2t_t *tag, uint16_t length){
     return pos; //either 1 or 4
 }
 
-//Ich brauch entweder Anfang und Ende vom speicher, dann weiß ich nicht was drin steht oder der user muss tlvs erstellen, wenn ich die eben haben will
-// oder der Tag braucht nen link auf seinen tlv
-// aber ich kann die Speicherstruktur nicht dynamisch erweitern
 int t2t_add_ndef_msg(nfc_t2t_t *tag, nfc_ndef_msg_t *msg){
     int tlv_header_size = 0;
-    printf("enter add_ndef\n");
     tlv_header_size = t2t_create_ndef_tlv(tag, msg->size);
-    printf("created tlv\n");
     if (tlv_header_size < 0){
         return -1;
     }
@@ -205,7 +264,6 @@ int t2t_add_ndef_msg(nfc_t2t_t *tag, nfc_ndef_msg_t *msg){
     tag->data_area_cursor += msg->size;
     //add terminator
     t2t_create_terminator_tlv(tag);
-    printf("leave add_ndef\n");
     return 0;
 }
 
@@ -225,70 +283,20 @@ void t2t_dump_tag_memory(nfc_t2t_t *tag){
     
 }
 
-//remove me 
-/*
-t2t_sn_t t2t_create_default_sn(void){
-    t2t_sn_t sn;
-    sn.SN0 = 0x01;
-    sn.SN1 = 0x02;
-    sn.SN2 = 0x03;
-    sn.SN3 = 0xFF;
-    sn.SN4 = 0x11;
-    sn.SN5 = 0x22;
-    sn.SN6 = 0x33;
-    sn.SN7 = 0x44;
-    sn.SN8 = 0x55;
-    sn.SN9 = 0x66;
-    return sn;
+int t2t_clear_data_area(nfc_t2t_t *tag){
+    memset(tag->data_area_start, 0x00, tag->data_area_size);
+    tag->data_area_cursor = tag->data_area_start;
+    return 0;
 }
 
-
-t2t_uid_t * t2t_create_4_byte_uid(nfc_t2t_t *tag){
-    t2t_sn_t *sn = &tag->sn;
-    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
-    uid->UID0 = sn->SN0;
-    uid->UID1 = sn->SN1;
-    uid->UID2 = sn->SN2;
-    uid->UID3 = sn->SN3;
-    uid->UID4 = uid->UID0 ^ uid->UID1 ^ uid->UID2 ^ uid->UID3;
-    uid->UID5 = 0XFF;
-    uid->UID6 = 0XFF;
-    uid->UID7 = 0XFF;
-    uid->UID8 = 0XFF;
-    uid->UID9 = NFC_T2T_VERSION_1_1; //find a norm to verify this
-    return uid;
+int t2t_clear_mem(nfc_t2t_t *tag){
+    tag->uid = NULL;
+    tag->lb = NULL;
+    tag->cc = NULL;
+    tag->data_area_start = NULL;
+    tag->data_area_cursor = NULL;
+    tag->data_area_size = 0;
+    memset(tag->memory, 0x00, tag->memory_size);
+    return 0;
 }
 
-
-t2t_uid_t * t2t_create_7_byte_uid(nfc_t2t_t *tag){
-    t2t_sn_t *sn = &tag->sn;
-    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
-    uid->UID0 = sn->SN0;
-    uid->UID1 = sn->SN1;
-    uid->UID2 = sn->SN2;
-    uid->UID3 = NFC_T2T_CASCADE_TAG_BYTE ^ uid->UID0 ^ uid->UID1 ^ uid->UID2; // BCC0 = CASCADE_TAG_BYTE ^ UID0 ^ UID1 ^ UID2
-    uid->UID4 = sn->SN3;
-    uid->UID5 = sn->SN4;
-    uid->UID6 = sn->SN5;
-    uid->UID7 = sn->SN6;
-    uid->UID8 = uid->UID3 ^ uid->UID4 ^ uid->UID5 ^ uid->UID6; // BCC1 = UID3 ^ UID4 ^ UID5 ^ UID6
-    uid->UID9 = NFC_T2T_VERSION_1_1; //find a norm to verify this
-    return uid;
-}
-
-t2t_uid_t * t2t_create_10_byte_uid(nfc_t2t_t *tag){
-    t2t_sn_t *sn = &tag->sn;
-    t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
-    uid->UID0 = sn->SN0;
-    uid->UID1 = sn->SN1;
-    uid->UID2 = sn->SN2;
-    uid->UID3 = sn->SN3;
-    uid->UID4 = sn->SN4;
-    uid->UID5 = sn->SN5;
-    uid->UID6 = sn->SN6;
-    uid->UID7 = sn->SN7;
-    uid->UID8 = sn->SN8;
-    uid->UID9 = sn->SN9;
-    return uid;
-}
-*/
