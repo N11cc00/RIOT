@@ -51,7 +51,6 @@
 #define NFC_T2T_SIZE_STATIC_LOCK_BYTES 2
 #define NFC_T2T_SIZE_STATIC_DATA_AREA 48
 #define NFC_T2T_START_STATIC_DATA_AREA NFC_T2T_SIZE_UID + NFC_T2T_SIZE_STATIC_LOCK_BYTES + NFC_T2T_SIZE_CC
-#define NFC_T2T_SIZE_DYNAMIC_LOCK_BYTES 48
 #define NFC_T2T_SIZE_CC 4
 #define NFC_T2T_READ_RETURN_BYTES 16
 
@@ -89,6 +88,14 @@ typedef struct {
     uint8_t *start_address;
 }nfc_ndef_msg_t;
 
+
+typedef struct{
+    bool default_lock_bits_set;
+    uint8_t *start_default_lock_bits;
+    uint32_t default_lock_bits;
+    uint32_t default_lock_bytes;
+}t2t_dynamic_t;
+
 typedef struct{
     uint8_t *memory;
     uint8_t memory_size;
@@ -101,8 +108,9 @@ typedef struct{
     uint32_t data_area_size;
     uint8_t *data_area_start;
     uint8_t *data_area_cursor;
-    // TODO t2t_dynamic_t *extra;
+    // TODO t2t_dynamic_t extra;
 } nfc_t2t_t;
+
 
 typedef struct 
 {
@@ -112,14 +120,17 @@ typedef struct
 
 //functions
 int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
-                                uint32_t memory_size, uint8_t *memory); // TODO - change this so it gets a pointer to a nfc_t2t_t instead of creating and returning one
+                                uint32_t memory_size, uint8_t *memory);
+int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+                                uint32_t memory_size, uint8_t *memory, nfc_ndef_msg_t *msg);
 
 uint8_t t2t_get_size(nfc_t2t_t *tag); //TODO - or remove, is in struct
-bool t2t_write_block(nfc_t2t_t *tag, nfc_t2t_write_command_t data); //TODO
-uint8_t * t2t_read_block(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
+int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
+int t2t_handle_read(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf);
 bool t2t_is_writeable(nfc_t2t_t *tag); //TODO
 bool t2t_set_writeable(nfc_t2t_t *tag); //TODO
-bool t2t_clear_mem(nfc_t2t_t *tag); //TODO
+int t2t_clear_mem(nfc_t2t_t *tag);
+int t2t_clear_data_area(nfc_t2t_t *tag);
 
 t2t_uid_t * t2t_create_uid(nfc_t2t_t *tag);
 

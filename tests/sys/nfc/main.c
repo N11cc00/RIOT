@@ -3,6 +3,7 @@
 #include "net/nfc/nfct.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include "net/nfc/ndef.h"
 #include "net/nfc/ndef_text_payload.h"
 
@@ -40,26 +41,37 @@ static bool test_t2t(void) {
     ndef_msg.start_address = msg_content;
     nfc_t2t_t tag = {0};
     int error = 0;
-    error = create_type_2_tag(&tag, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, tag_mem);
+    error = create_type_2_tag(&tag, NULL, NULL, NULL, sizeof(tag_mem), tag_mem);
     if(error){
         printf("Error while creating the tag\n");
     }
     printf("Tag created\n");
     uint8_t buf[16];
-    t2t_read_block(&tag, 0,buf);
+    t2t_handle_read(&tag, 0,buf);
     printf("read block\n");
     //nfc_tlv_t null_block = {0};
     t2t_create_null_tlv(&tag);
     t2t_create_null_tlv(&tag);
     t2t_create_null_tlv(&tag);
     t2t_create_null_tlv(&tag);
-    //t2t_add_tlv(&tag, &null_block);
-    //nfc_ndef_msg_t msg;
-    //t2t_create_ndef_msg(&msg);
-    //nfc_tlv_t ndef_block;
-    //t2t_create_ndef_tlv(&ndef_block, &ndef_msg);
+
     t2t_add_ndef_msg(&tag, &ndef_msg);
     printf("added ndef\n");
+
+    uint8_t write_buf[4] = {'H','E','L','O'};
+    t2t_handle_write(&tag, 10, write_buf);
+    //manual set write_only
+    t2t_handle_read(&tag, 3, buf);
+    memcpy(write_buf, buf, 4);
+    write_buf[3] = (uint8_t) 0x0F;
+    error = t2t_handle_write(&tag, 3, write_buf);
+    if(error != 0) printf("should not happen\n");
+    write_buf[0] = 'U';
+    write_buf[1] = 'U';
+    write_buf[2] = 'U';
+    write_buf[3] = 'U';
+    error = t2t_handle_write(&tag, 11, write_buf);
+    if(error != 0) printf("that's fine\n");
     t2t_dump_tag_memory(&tag);
     return true;
 }
