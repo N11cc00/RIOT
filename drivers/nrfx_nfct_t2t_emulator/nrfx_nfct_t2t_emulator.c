@@ -5,15 +5,15 @@
 #include "nrfx_nfct.h"
 #include "container.h"
 #include "log.h"
+#include "nfct_t2t_emulator.h"
+#include "net/nfc/t2t/t2t.h"
 
-
-#define T2T_BLOCK_SIZE 4
 #define BUFFER_SIZE 256
 
 static nfct_type_2_tag_t *tag;
 static event_queue_t event_queue;
 
-static uint8_t thread_stack[THREAD_STACKSIZE_MAIN];
+static char thread_stack[THREAD_STACKSIZE_MAIN];
 static uint16_t thread_pid = 0;
 
 static bool initialized = false;
@@ -78,20 +78,26 @@ static void send_ack_nack(bool ack) {
 }
 
 static void process_write_command(uint8_t block_address, const uint8_t* bytes) {
-    uint32_t position = block_address * T2T_BLOCK_SIZE;
     
     // write 4 bytes to the address
 
-    print_bytes_as_hex(bytes, 4);
-    tag->memory[position] = bytes[0];
-    tag->memory[position + 1] = bytes[1];
-    tag->memory[position + 2] = bytes[2];
-    tag->memory[position + 3] = bytes[3];
+    // print_bytes_as_hex(bytes, 4);
+    t2t_write_block(tag, block_address, bytes);
 
     LOG_DEBUG("Wrote 4 bytes to block number %d", block_address);
     send_ack();
     print_bytes_as_hex(tag->memory, tag->memory_size);
     
+}
+
+static void* nrfx_event_loop(void *arg) {
+    (void) arg;
+    while (1) {
+        event_t *event = event_wait(&event_queue);
+        event_handler_t handler = event->handler;
+        handler(event);
+    }
+    return NULL;
 }
 
 
@@ -102,7 +108,7 @@ static void process_read_command(uint8_t block_address) {
     uint8_t start_block = block_address;
     uint8_t end_block = block_address + 4;
 
-    uint8_t start_byte = start_block * T2T_BLOCK_SIZE;
+    uint8_t start_byte = start_block * NFC_T2T_BLOCK_SIZE;
     uint8_t end_byte = end_block * T2T_BLOCK_SIZE;
 
 
@@ -168,16 +174,22 @@ static void receive_handler(event_t * event) {
 }
 
 static void enable_handler(event_t *event) {
+    (void) event;
+
     nrfx_nfct_enable();
     enabled = true;
 }
 
 static void disable_handler(event_t *event) {
+    (void) event;
+
     nrfx_nfct_disable();
     enabled = false;
 }
 
 static void uninitialize_handler(event_t *event) {
+    (void) event;
+
     nrfx_nfct_uninit();
     thread_zombify();
 }
@@ -195,6 +207,7 @@ static void transmit_handler(event_t * event) {
 */
 
 static void end_of_tx_handler(event_t * event) {
+    (void) event;
     memset(data_buffer_rx, 0, buffer_size);
     nrfx_nfct_data_desc_t data_desc_rx = {
         .p_data = data_buffer_rx,
@@ -204,10 +217,12 @@ static void end_of_tx_handler(event_t * event) {
 }
 
 static void start_of_rx_handler(event_t * event) {
+    (void) event;
     LOG_DEBUG("Receiving data\n");
 }
 
 static void selected_handler(event_t * event) {
+    (void) event;
     memset(data_buffer_rx, 0, buffer_size);
     nrfx_nfct_data_desc_t data_desc_rx = {
         .p_data = data_buffer_rx,
@@ -218,14 +233,18 @@ static void selected_handler(event_t * event) {
 }
 
 static void field_detected_handler(event_t * event) {
+    (void) event;
+
     LOG_DEBUG("[EVENT] Field detected\n");
     // nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK);
 }
 
+/*
 static void field_lost_handler(event_t * event) {
     LOG_DEBUG("[EVENT] Field lost\n");
     selected = false;
 }
+*/
 
 /* user_write to tag {
 post_event_queue(event_queue, write_event);
@@ -304,7 +323,7 @@ void irq_event_handler(nrfx_nfct_evt_t const * event) {
     }
 }
 
-void initialize_t2t(nfc_t2t_t* _tag) {
+void initialize_t2t(nfct_type_2_tag_t* _tag) {
     if (initialized) {
         LOG_WARNING("T2T already initialized\n");
         return;
@@ -339,6 +358,8 @@ void initialize_t2t(nfc_t2t_t* _tag) {
     LOG_DEBUG("Initialization of nfct driver successful!\n");
 
     // this can be extracted from the t2t struct
+    uint8_t nfcid1[] = {0x04, 0x01, 0x02, 0x03};
+    uint8_t nfcid1_size = 4;
     configure_autocolres(nfcid1, nfcid1_size);
     /*
     } else {
@@ -349,9 +370,9 @@ void initialize_t2t(nfc_t2t_t* _tag) {
     nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_FIELDLOST_SENSE_MASK);
 
     if (thread_pid == 0) {
-        thread_pid = thread_create(thread_stack, sizeof(thread_stack), THREAD_PRIORITY_MAIN - 1, 0, event_loop, &event_queue, "NRFX NFCT Type 2 Tag Emulator Thread");
+        thread_pid = thread_create(thread_stack, sizeof(thread_stack), THREAD_PRIORITY_MAIN - 1, 0, nrfx_event_loop, NULL, "NRFX NFCT Type 2 Tag Emulator Thread");
     } else {
-        thread_wakeup(pid);
+        thread_wakeup(thread_pid);
     }
 }
 
@@ -399,5 +420,5 @@ void disable_t2t(void) {
     }
 
     disable_event.handler = disable_handler;
-    event_post(&event_queue, &e);
+    event_post(&event_queue, &disable_event);
 }

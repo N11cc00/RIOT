@@ -7,7 +7,7 @@
 #include "net/nfc/ndef_text_payload.h"
 
 static void print_ndef_as_hex(ndef_t const *message) {
-    printf("NDEF message size: %d\n", message->buffer.cursor);
+    printf("NDEF message size: %lu\n", message->buffer.cursor);
     for (uint32_t i = 0; i < message->buffer.cursor; ++i) {
         if (i % 4 == 0 && i != 0) {
             printf("\n");
@@ -86,9 +86,20 @@ static bool test_two_ndef_text_records(void) {
     return true;
 }
 
+bool test_nfct(void) {
+    ndef_t ndef_message;
+    uint8_t buffer[1024];
+
+    initialize_ndef_message(&ndef_message, buffer, 1024);
+    add_ndef_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
+    create_tag(&default_t2t_emulator_dev, &ndef_message, TYPE_2_TAG);
+    return true;
+}
+
 int main(void){
     test_t2t();
     test_ndef_text_record();
     test_two_ndef_text_records();
+    test_nfct();
 
 }

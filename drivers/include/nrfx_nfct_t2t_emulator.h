@@ -10,13 +10,8 @@
     the functionality on this device
 #endif
 
-
 #include "nrfx_nfct.h"
-#include "t2t.h"
-
-#include "nrfx_nfct_t2t_emulator.h"
-
-// TODO: check for nrfx package in use here
+#include "net/nfc/t2t/t2t.h"
 
 typedef struct {
     event_t super;
@@ -36,11 +31,5 @@ void uninitialize_t2t(void);
 void enable_t2t(void);
 
 void disable_t2t(void);
-
-
-
-void start_event_loop(void);
-
-
 
 #endif

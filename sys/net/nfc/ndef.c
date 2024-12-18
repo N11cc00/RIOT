@@ -68,6 +68,10 @@ static void convert_uint32_to_payload_length(uint8_t* bytes, uint32_t size, uint
     }
 }
 
+size_t get_ndef_size(ndef_t const *ndef) {
+    return ndef->buffer.cursor;
+}
+
 void pretty_print_ndef(ndef_t const *ndef) {
     printf("----------------\n");
     printf("NDEF Printing\n");

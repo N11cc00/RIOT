@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define NDEF_RECORD_HEADER_SIZE 1
 #define NDEF_RECORD_TYPE_LENGTH_SIZE 1
@@ -16,8 +17,13 @@
 
 
 typedef struct {
+	/* contains the NDEF memory */
 	uint8_t *memory;
+
+	/* size of the memory that can't be exceeded by the cursor */
 	uint32_t memory_size;
+
+	/* points to the last byte + 1 of the memory array */
 	uint32_t cursor;
 } ndef_buffer_t;
 
@@ -81,6 +87,13 @@ typedef struct {
  */
 void pretty_print_ndef(ndef_t const *ndef);
 
+/**
+ * @brief Get the NDEF message size
+ * 
+ * @param[in] ndef NDEF messgae
+ * @return size_t 
+ */
+size_t get_ndef_size(ndef_t const *ndef);
 
 /**
  * @brief Writes the data buffer to the given NDEF message. 

@@ -13,10 +13,10 @@ typedef enum {
 #if MODULE_NRFX_NFCT
 #include "nrfx_nfct_t2t_emulator.h"
 nfct_t2t_emulator_t default_t2t_emulator_dev = {
-    .initialize = t2t_initialize,
-    .enable = t2t_enable,
-    .disable = t2t_disable,
-    .send = t2t_send,
+    .initialize = initialize_t2t,
+    .enable = enable_t2t,
+    .disable = disable_t2t,
+    .uninit = uninitialize_t2t
 };
 #endif 
 

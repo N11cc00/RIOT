@@ -49,7 +49,7 @@
     #include <nrfx_config_nrf52832.h>
 #elif defined(NRF52833_XXAA)
     #include <nrfx_config_nrf52833.h>
-#elif defined(NRF52840_XXAA)
+#elif defined(CPU_MODEL_NRF52840XXAA)
     #include <nrfx_config_nrf52840.h>
 #elif defined(NRF5340_XXAA_APPLICATION)
     #include <nrfx_config_nrf5340_application.h>
