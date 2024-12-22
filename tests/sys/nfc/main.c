@@ -18,20 +18,6 @@ static void print_ndef_as_hex(ndef_t const *message) {
     printf("\n\n");
 }
 
-static void print_length_field(uint8_t* bytes, bool sr) {
-    if (sr) {
-        printf("Length field: ");
-        printf("0x%02x\n", bytes[0]);
-        return;
-    } else {
-        printf("Length field: ");
-        for (int i = 0; i < 4; ++i) {
-            printf("0x%02x ", bytes[i]);
-        }
-        printf("\n");
-    }
-}
-
 static bool test_t2t(void) {
     uint8_t tag_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     //uint8_t ndef_message_content[] = {'H','e','l','l','o',' ','W','o','r','l','d'};
@@ -39,8 +25,8 @@ static bool test_t2t(void) {
     uint8_t buffer[1024];
     nfc_t2t_t tag;
 
-    initialize_ndef_message(&ndef_msg, buffer, 1024);
-    add_ndef_text_record(&ndef_msg, "Hello World", 11, "en", 2, UTF8);
+    ndef_init(&ndef_msg, buffer, 1024);
+    ndef_add_text_record(&ndef_msg, "Hello World", 11, "en", 2, UTF8);
 
 
     int error = 0;
@@ -83,21 +69,20 @@ static bool test_ndef_text_record(void) {
     ndef_t message;
     uint8_t buffer[1024];
 
-    initialize_ndef_message(&message, buffer, 1024);
-    add_ndef_text_record(&message, "Hello World", 11, "en", 2, UTF8);
-    print_length_field(message.records[0].payload_length, message.records[0].payload_length_size == 1);
+    ndef_init(&message, buffer, 1024);
+    ndef_add_text_record(&message, "Hello World", 11, "en", 2, UTF8);
     print_ndef_as_hex(&message);
-    pretty_print_ndef(&message);
+    ndef_pretty_print(&message);
     return true;
 }
 
 static bool test_two_ndef_text_records(void) {
     ndef_t message;
     uint8_t buffer[1024];
-    initialize_ndef_message(&message, buffer, 1024);
-    add_ndef_text_record(&message, "Hello World", 11, "en", 2, UTF8);
-    add_ndef_text_record(&message, "Hej Verden", 10, "da", 2, UTF8);
-    pretty_print_ndef(&message);
+    ndef_init(&message, buffer, 1024);
+    ndef_add_text_record(&message, "Hello World", 11, "en", 2, UTF8);
+    ndef_add_text_record(&message, "Hej Verden", 10, "da", 2, UTF8);
+    ndef_pretty_print(&message);
     return true;
 }
 
@@ -107,7 +92,7 @@ bool test_nfct(void) {
     uint8_t buffer[1024];
 
     initialize_ndef_message(&ndef_message, buffer, 1024);
-    add_ndef_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
+    ndef_add_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
     create_tag(&DEFAULT_T2T_EMULATOR_DEV, &ndef_message, TYPE_2_TAG);
     return true;
 }

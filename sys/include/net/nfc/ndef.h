@@ -28,6 +28,11 @@ typedef struct {
 	uint32_t cursor;
 } ndef_buffer_t;
 
+typedef enum {
+	NDEF_SHORT_RECORD = 1,
+	NDEF_LONG_RECORD = 4
+} ndef_record_type_t;
+
 typedef struct {
 	uint8_t *start;
 
@@ -39,11 +44,12 @@ typedef struct {
     uint8_t *id_length;
     uint8_t *id;
 
-	uint8_t payload_length_size;
+	ndef_record_type_t record_type;
     uint8_t *payload_length;
-
     uint8_t *payload;
 } ndef_record_desc_t;
+
+
 
 
 typedef enum {
@@ -86,7 +92,7 @@ typedef struct {
  * 
  * @param[in] ndef NDEF message to print
  */
-void pretty_print_ndef(ndef_t const *ndef);
+void ndef_pretty_print(ndef_t const *ndef);
 
 /**
  * @brief Get the NDEF message size
@@ -94,7 +100,7 @@ void pretty_print_ndef(ndef_t const *ndef);
  * @param[in] ndef NDEF messgae
  * @return size_t 
  */
-size_t get_ndef_size(ndef_t const *ndef);
+size_t ndef_get_size(ndef_t const *ndef);
 
 /**
  * @brief Writes the data buffer to the given NDEF message. 
@@ -108,7 +114,7 @@ size_t get_ndef_size(ndef_t const *ndef);
  * @return The pointer to the memory cursor before the write operation, NULL if the data is too long
  * for the remaining buffer size.
  */
-uint8_t* write_to_ndef_buffer(ndef_t* ndef, uint8_t const *data, uint32_t data_length);
+uint8_t* ndef_write_to_buffer(ndef_t* ndef, uint8_t const *data, uint32_t data_length);
 
 /**
  * @brief Initializes the given NDEF message with the given buffer and buffer size.
@@ -120,7 +126,7 @@ uint8_t* write_to_ndef_buffer(ndef_t* ndef, uint8_t const *data, uint32_t data_l
  * @param[in] buffer Empty buffer that is used by the NDEF message
  * @param[in] buffer_size Buffer size
  */
-void initialize_ndef_message(ndef_t *message, uint8_t *buffer, uint32_t buffer_size);
+void ndef_init(ndef_t *message, uint8_t *buffer, uint32_t buffer_size);
 
 /**
  * @brief 
@@ -140,7 +146,7 @@ void initialize_ndef_message(ndef_t *message, uint8_t *buffer, uint32_t buffer_s
  * @param tnf 
  * @return Returns 0 if the record was added successfully, a negative error code otherwise.
  */
-int add_ndef_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, bool mb, bool me, bool cf, bool sr, bool il, ndef_record_tnf_t tnf);
+int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, bool mb, bool me, bool cf, bool sr, bool il, ndef_record_tnf_t tnf);
 
 
 // int encode_ndef_message(ndef_t const *message, uint8_t *buffer, uint32_t const len);

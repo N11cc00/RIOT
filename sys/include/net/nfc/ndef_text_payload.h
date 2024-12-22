@@ -20,7 +20,7 @@ typedef struct {
 } ndef_record_text_payload_desc_t;
 
 
-int add_ndef_text_record(ndef_t *message, char const *text, uint32_t text_length, 
+int ndef_add_text_record(ndef_t *message, char const *text, uint32_t text_length, 
 char const *lang_code, uint8_t lang_code_length, ndef_text_encoding_t encoding);
 
 #endif
