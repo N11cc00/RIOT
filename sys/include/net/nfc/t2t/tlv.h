@@ -9,15 +9,12 @@
 
 #define NFC_TLV_SIZE_TYPE_NULL_TLV 0
 #define NFC_TLV_SIZE_TYPE_TERMINATOR_TLV 0
+#define NFC_TLV_SIZE_TYPE_LOCK_CTRL_TLV 3
+#define NFC_TLV_SIZE_TYPE_MEMORY_CTRL_TLV 3
 
 typedef struct {
     uint8_t type;
-    /*
-    union( //this still results in a 3 byte placeholder -> doesn't work to put in place directly
-        uint8_t length;
-        uint8_t length[3];
-    );*/
     uint16_t length;
-    void * data;
-    uint8_t *start_of_block_in_tag;
+    uint8_t * address_in_tag;
+    uint8_t data[];
 } nfc_tlv_t;
