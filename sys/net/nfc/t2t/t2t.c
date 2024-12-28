@@ -90,9 +90,6 @@ static uint8_t * block_no_to_address(uint8_t block_no, nfc_t2t_t *tag){
 }
 
 int t2t_create_uid(nfc_t2t_t *tag){
-    if(&tag->sn == NULL){
-        return -1;
-    }
     t2t_sn_t *sn = &tag->sn;
     t2t_uid_t *uid = (t2t_uid_t*) &tag->memory[0];
     uid->uid[0] = sn->sn[0];

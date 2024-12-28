@@ -139,21 +139,22 @@ static bool test_two_ndef_text_records(void) {
     return true;
 }
 
-/*
+
 bool test_nfct(void) {
     ndef_t ndef_message;
     uint8_t buffer[1024];
 
-    initialize_ndef_message(&ndef_message, buffer, 1024);
+    ndef_init(&ndef_message, buffer, 1024);
     ndef_add_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
-    create_tag(&DEFAULT_T2T_EMULATOR_DEV, &ndef_message, TYPE_2_TAG);
+    nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &ndef_message, TYPE_2_TAG);
     return true;
 }
 
-*/
 int main(void){
     test_t2t();
     test_ndef_text_record();
     test_two_ndef_text_records();
-    // test_nfct();
+    test_nfct();
+    while (1) {};
+    
 }
