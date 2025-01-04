@@ -146,7 +146,12 @@ bool test_nfct(void) {
 
     ndef_init(&ndef_message, buffer, 1024);
     ndef_add_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
-    nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &ndef_message, TYPE_2_TAG);
+
+    nfc_t2t_t t2t;
+    uint8_t t2t_mem[NFC_T2T_STATIC_MEMORY_SIZE];
+    create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
+    nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &t2t, &ndef_message, TYPE_2_TAG);
+    while(1) {};
     return true;
 }
 
@@ -155,6 +160,5 @@ int main(void){
     test_ndef_text_record();
     test_two_ndef_text_records();
     test_nfct();
-    while (1) {};
-    
+    return 0;
 }
