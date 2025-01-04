@@ -343,7 +343,7 @@ void initialize_t2t(nfc_t2t_t *_tag) {
     initialized = true;
     assert(error == NRFX_SUCCESS);
 
-    LOG_DEBUG("Initialization of nfct driver successful!\n");
+    LOG_DEBUG("Initialization of NFCT driver successful!\n");
 
     // this can be extracted from the t2t struct
     uint8_t nfcid1[] = {0x04, 0x01, 0x02, 0x03};
@@ -358,8 +358,10 @@ void initialize_t2t(nfc_t2t_t *_tag) {
     nrf_nfct_shorts_enable(NRF_NFCT, NRF_NFCT_SHORT_FIELDDETECTED_ACTIVATE_MASK | NRF_NFCT_SHORT_FIELDLOST_SENSE_MASK);
 
     if (thread_pid == 0) {
+        LOG_DEBUG("Creating thread for NFCT Type 2 Tag Emulator\n");
         thread_pid = thread_create(thread_stack, sizeof(thread_stack), THREAD_PRIORITY_MAIN - 1, 0, nrfx_event_loop, NULL, "NRFX NFCT Type 2 Tag Emulator Thread");
     } else {
+        LOG_WARNING("Thread already created, waking up thread\n");
         thread_wakeup(thread_pid);
     }
 }

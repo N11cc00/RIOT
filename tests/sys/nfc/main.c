@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "log.h"
 #include "net/nfc/ndef.h"
 #include "net/nfc/ndef_text_payload.h"
 
@@ -19,6 +20,7 @@ static void print_ndef_as_hex(ndef_t const *message) {
 }
 
 static int test_t2t_static_mem(void){
+    printf("Start t2t static memory test\n");
     uint8_t tag_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     nfc_t2t_t tag;
     int error = 0;
@@ -77,7 +79,7 @@ static int test_t2t_static_mem(void){
 }
 
 static int test_t2t_dynamic_mem(void){
-    printf("start\n");
+    printf("Start t2t dynamic memory test\n");
     size_t tag_size = 1200; //2 sectors
     uint8_t tag_mem[tag_size];
     nfc_t2t_t tag;
@@ -140,7 +142,8 @@ static bool test_two_ndef_text_records(void) {
 }
 
 
-bool test_nfct(void) {
+static bool test_nfct(void) {
+    printf("Starting NFCT test\n");
     ndef_t ndef_message;
     uint8_t buffer[1024];
 
