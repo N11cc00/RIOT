@@ -10,6 +10,7 @@ USEMODULE += nfct
 USEMODULE += event
 
 CFLAGS += -DISR_STACKSIZE=1024*2
+CFLAGS += -DTHREAD_STACKSIZE_DEFAULT=2048
 CFLAGS += -Wno-error=cast-align
 CFLAGS += -Wno-error=unused-variable
 
