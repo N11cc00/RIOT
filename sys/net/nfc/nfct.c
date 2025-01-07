@@ -10,3 +10,8 @@ void nfct_create_tag(nfct_t2t_emulator_t* dev, void *tag, const ndef_t* message,
         dev->enable();
     }
 }
+
+void nfct_delete_tag(nfct_t2t_emulator_t* dev) {
+    dev->disable();
+    dev->uninit();
+}

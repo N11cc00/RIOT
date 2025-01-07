@@ -93,8 +93,11 @@ static void process_write_command(uint8_t block_no, uint8_t const *bytes) {
 
 static void* nrfx_event_loop(void *arg) {
     (void) arg;
+    event_queue_init(&event_queue);
+
     while (1) {
         event_t *event = event_wait(&event_queue);
+        LOG_DEBUG("[EVENT QUEUE] Event received\n");
         event_handler_t handler = event->handler;
         handler(event);
     }
@@ -163,6 +166,7 @@ static void receive_handler(event_t * event) {
 
 static void enable_handler(event_t *event) {
     (void) event;
+    LOG_DEBUG("[EVENT] Enabling T2T\n");
 
     nrfx_nfct_enable();
     enabled = true;
@@ -318,7 +322,7 @@ void initialize_t2t(nfc_t2t_t *_tag) {
     }
 
     tag = _tag;
-    event_queue_init(&event_queue);
+
     initialized = true;
     nrfx_nfct_config_t config = {
         .rxtx_int_mask = NRFX_NFCT_EVT_FIELD_DETECTED |
@@ -389,7 +393,6 @@ void uninitialize_t2t(void) {
         return;
     }
 
-    assert(thread_pid != 0);
     assert(thread_pid != 0);
     uninitialize_event.handler = uninitialize_handler;
     event_post(&event_queue, &uninitialize_event);

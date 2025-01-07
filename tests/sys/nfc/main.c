@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "log.h"
+#include "ztimer.h"
 #include "net/nfc/ndef.h"
 #include "net/nfc/ndef_text_payload.h"
 
@@ -154,14 +155,18 @@ static bool test_nfct(void) {
     uint8_t t2t_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
     nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &t2t, &ndef_message, TYPE_2_TAG);
-    while(1) {};
+    /* sleep for 10 seconds, then disable the tag */
+    ztimer_sleep(ZTIMER_SEC, 10);
+    nfct_delete_tag(&DEFAULT_T2T_EMULATOR_DEV);
     return true;
 }
 
 int main(void){
+    puts("Starting NFC tests");
     test_t2t();
     test_ndef_text_record();
     test_two_ndef_text_records();
     test_nfct();
+    puts("Ending NFC tests");
     return 0;
 }

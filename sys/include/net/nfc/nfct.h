@@ -25,6 +25,6 @@ typedef enum {
 
 void nfct_create_tag(nfct_t2t_emulator_t* dev, void* tag, const ndef_t* message, tag_type_t tag_type);
 
-void nfct_delete_tag(void);
+void nfct_delete_tag(nfct_t2t_emulator_t* dev);
 
 #endif
