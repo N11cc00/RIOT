@@ -144,10 +144,25 @@ void ndef_init(ndef_t *message, uint8_t *buffer, uint32_t buffer_size);
  * @param sr 
  * @param il 
  * @param tnf 
- * @return Returns 0 if the record was added successfully, a negative error code otherwise.
+ * @return int 0 if successful, error otherwise
  */
 int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, bool mb, bool me, bool cf, bool sr, bool il, ndef_record_tnf_t tnf);
 
+
+/**
+ * @brief Removes the last record from the NDEF message
+ * 
+ * @param message 
+ * @return int 0 if successful, error otherwise
+ */
+int ndef_remove_record(ndef_t *message);
+
+/**
+ * @brief Removes all records from the NDEF message
+ * 
+ * @param message Message to clear
+ */
+void ndef_clear(ndef_t *message);
 
 // int encode_ndef_message(ndef_t const *message, uint8_t *buffer, uint32_t const len);
 

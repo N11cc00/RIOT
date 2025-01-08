@@ -149,6 +149,23 @@ static bool test_two_ndef_text_records(void) {
     return true;
 }
 
+static bool test_ndef_remove(void) {
+    puts("NDEF remove test");
+    ndef_t message;
+    uint8_t buffer[1024];
+    ndef_init(&message, buffer, 1024);
+    ndef_add_text_record(&message, "Hello World", 11, "en", 2, UTF8);
+    ndef_add_text_record(&message, "Hej Verden", 10, "da", 2, UTF8);
+    puts("Before removal:");
+    ndef_pretty_print(&message);
+    ndef_remove_record(&message);
+
+    puts("After removal:");
+    ndef_pretty_print(&message);
+
+    return true;
+}
+
 
 static bool test_nfct(void) {
     printf("Starting NFCT test\n");
@@ -171,6 +188,7 @@ int main(void){
     test_t2t();
     test_ndef_text_record();
     test_two_ndef_text_records();
+    test_ndef_remove();
     test_nfct();
     puts("Ending NFC tests");
     return 0;

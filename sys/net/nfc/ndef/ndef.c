@@ -199,13 +199,53 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
      * */
     record.payload = &message->buffer.memory[message->buffer.cursor];
 
-    // the payload has to be written by the calling function
+    /* the payload has to be written by the calling function */
     (void) payload;
 
     message->records[message->record_count] = record;
     message->record_count += 1;
 
     return 0;
+}
+
+int ndef_remove_record(ndef_t *message) {
+    assert(message != NULL);
+
+    if (message->record_count == 0) {
+        LOG_ERROR("No records to remove");
+        return -1;
+    }
+
+    /* for only one record we simply set the count and cursor to 0 */
+    if (message->record_count == 1) {
+        message->record_count = 0;
+        message->buffer.cursor = 0;
+        return 0;
+    }
+
+    /**
+     * the new cursor position can be found by looking at the start pointer
+     * of the last record and setting the cursor to that location 
+     */
+    ndef_record_desc_t *last_record = &message->records[message->record_count-1];
+
+    /** 
+     * the new cursor position is the difference between the start of the first record
+     * record and the start of the last record as the cursor counts the bytes
+     */ 
+    uint32_t new_cursor = last_record->start - message->records[0].start;
+    message->buffer.cursor = new_cursor;
+
+    message->record_count -= 1;
+
+    return 0;    
+}
+
+void ndef_clear(ndef_t *message) {
+    assert(message != NULL);
+
+    message->record_count = 0;
+    message->buffer.cursor = 0;
 }
 
 /*
