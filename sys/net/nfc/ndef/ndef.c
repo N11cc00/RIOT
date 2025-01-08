@@ -133,13 +133,16 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
     ndef_record_desc_t record;
 
     assert(message != NULL);
+    assert(payload_length > 0);
+    assert(payload_length <= LONG_RECORD_PAYLOAD_LENGTH);
     
     if (message->record_count >= MAX_NDEF_RECORD_COUNT) {
         LOG_ERROR("NDEF record count exceeds maximum\n");
         return -1;
     }
 
-    /** The ME flag can only be set on the last record of the NDEF message.
+    /** 
+     *  The ME flag can only be set on the last record of the NDEF message.
      *  The second to last record should have the ME flag cleared.
      */
     if (message->record_count >= 1) {
@@ -149,8 +152,16 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
         mb = true;
     }
 
-    // message end has to be true because records are only added at the end
+    /* message end has to be true because records are only added at the end */
     me = true;
+
+    if (payload_length <= SHORT_RECORD_PAYLOAD_LENGTH) {
+        sr = true;
+    } else {
+        sr = false;
+    }
+
+
 
     uint8_t header_byte = 0;
     header_byte |= mb ? RECORD_MB_MASK : 0;
@@ -159,11 +170,6 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
     header_byte |= sr ? RECORD_SR_MASK : 0;
     header_byte |= il ? RECORD_IL_MASK : 0;
     header_byte |= tnf;
-
-    assert(payload_length > 0);
-    assert(payload_length <= LONG_RECORD_PAYLOAD_LENGTH);
-    assert((payload_length <= SHORT_RECORD_PAYLOAD_LENGTH && sr == 1) ||
-           (payload_length > SHORT_RECORD_PAYLOAD_LENGTH && sr == 0));
     
 
     if (sr == 1) {
@@ -235,8 +241,11 @@ int ndef_remove_record(ndef_t *message) {
      */ 
     uint32_t new_cursor = last_record->start - message->records[0].start;
     message->buffer.cursor = new_cursor;
-
     message->record_count -= 1;
+
+    /* the last record must now have ME to 1 */
+    message->records[message->record_count - 1].header[0] |= RECORD_ME_MASK;
+
 
     return 0;    
 }

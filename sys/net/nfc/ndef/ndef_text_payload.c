@@ -35,6 +35,7 @@ char const *lang_code, uint8_t lang_code_length, ndef_text_encoding_t encoding) 
     status_byte |= encoding << ENCODING_POSITION;
     
 
+    /*
     bool mb;
     if (message->record_count == 0) {
         mb = true;
@@ -48,7 +49,8 @@ char const *lang_code, uint8_t lang_code_length, ndef_text_encoding_t encoding) 
     } else {
         sr = false;
     }
-    ndef_add_record(message, ndef_text_record_type, 1, 0, 0, (uint8_t*) text, payload_length, mb, 1, 0, sr, 0, TNF_WELL_KNOWN);
+    */
+    ndef_add_record(message, ndef_text_record_type, sizeof(ndef_text_record_type), 0, 0, (uint8_t*) text, payload_length, 0, 1, 0, 0, 0, TNF_WELL_KNOWN);
 
     ndef_write_to_buffer(message, &status_byte, 1);
     ndef_write_to_buffer(message, (uint8_t*) lang_code, lang_code_length);
