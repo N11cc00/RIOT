@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "tlv.h"
-#include "net/nfc/ndef.h"
+#include "net/nfc/ndef/ndef.h"
 
 
 // ISO-1443 specific defines

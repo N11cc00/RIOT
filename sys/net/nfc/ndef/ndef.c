@@ -1,6 +1,5 @@
-#include "net/nfc/ndef.h"
-
-#include "net/nfc/ndef_text_payload.h"
+#include "net/nfc/ndef/ndef.h"
+#include "net/nfc/ndef/ndef_text_payload.h"
 #include "log.h"
 #include <stdint.h>
 #include <stdbool.h>

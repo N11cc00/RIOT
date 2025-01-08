@@ -1,7 +1,7 @@
 #ifndef NFCT_H
 #define NFCT_H
 
-#include "ndef.h"
+#include "net/nfc/ndef/ndef.h"
 #include "nfct_t2t_emulator.h"
 #include "net/nfc/t2t/t2t.h"
 #include "modules.h"

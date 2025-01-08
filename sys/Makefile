@@ -122,8 +122,11 @@ endif
 ifneq (,$(filter nfc_t2t,$(USEMODULE)))
   DIRS += net/nfc/t2t
 endif
+ifneq (,$(filter ndef,$(USEMODULE)))
+  DIRS += net/nfc/ndef
+endif
 ifneq (,$(filter nfct,$(USEMODULE)))
-  DIRS += net/nfc
+  DIRS += net/nfc/nfct
 endif
 ifneq (,$(filter netopt,$(USEMODULE)))
   DIRS += net/crosslayer/netopt

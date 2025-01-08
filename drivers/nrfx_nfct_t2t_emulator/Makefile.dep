@@ -1,0 +1,2 @@
+USEPKG += nrfx
+USEMODULE += nrfx_nfct

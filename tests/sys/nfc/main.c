@@ -1,13 +1,20 @@
 //#include "../../../sys/include/net/nfc/t2t/t2t.h"
 #include "net/nfc/t2t/t2t.h"
-#include "net/nfc/nfct.h"
+#include "net/nfc/nfct/nfct.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "board.h"
+#include "cfg_nfct_default.h"
 #include "log.h"
 #include "ztimer.h"
-#include "net/nfc/ndef.h"
-#include "net/nfc/ndef_text_payload.h"
+#include "net/nfc/ndef/ndef.h"
+#include "net/nfc/ndef/ndef_text_payload.h"
+
+#define BUFFER_SIZE 1024
+
+static uint8_t ndef_mem[BUFFER_SIZE];
+static uint8_t t2t_mem[BUFFER_SIZE];
 
 static void print_ndef_as_hex(ndef_t const *message) {
     printf("NDEF message size: %lu\n", message->buffer.cursor);
@@ -146,13 +153,11 @@ static bool test_two_ndef_text_records(void) {
 static bool test_nfct(void) {
     printf("Starting NFCT test\n");
     ndef_t ndef_message;
-    uint8_t buffer[1024];
 
-    ndef_init(&ndef_message, buffer, 1024);
+    ndef_init(&ndef_message, ndef_mem, 1024);
     ndef_add_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
 
     nfc_t2t_t t2t;
-    uint8_t t2t_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
     nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &t2t, &ndef_message, TYPE_2_TAG);
     /* sleep for 10 seconds, then disable the tag */
