@@ -134,6 +134,7 @@ FEATURES_EXISTING := \
     netif_ethernet \
     netif_openwsn \
     newlib \
+    nfct_nrfx \
     no_idle_thread \
     periph_adc \
     periph_adc_continuous \
@@ -200,6 +201,7 @@ FEATURES_EXISTING := \
     periph_ltdc \
     periph_mcg \
     periph_mcg_lite \
+    periph_nfct \
     periph_nvm \
     periph_pio \
     periph_plic \
