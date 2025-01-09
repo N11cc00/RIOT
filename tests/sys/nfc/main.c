@@ -9,7 +9,6 @@
 #include "log.h"
 #include "ztimer.h"
 #include "net/nfc/ndef/ndef.h"
-#include "net/nfc/ndef/ndef_text_payload.h"
 
 #define BUFFER_SIZE 1024
 
@@ -129,6 +128,7 @@ static bool test_t2t(void) {
 }
 
 static bool test_ndef_text_record(void) {
+    puts("NDEF text record test");
     ndef_t message;
     uint8_t buffer[1024];
 
@@ -139,7 +139,20 @@ static bool test_ndef_text_record(void) {
     return true;
 }
 
-static bool test_two_ndef_text_records(void) {
+static bool test_ndef_uri_record(void) {
+    puts("NDEF URI record test");
+    ndef_t message;
+    uint8_t buffer[1024];
+    ndef_init(&message, buffer, 1024);
+
+    ndef_add_uri_record(&message, NDEF_URI_HTTPS_WWW, "riot-os.org", 11);
+    print_ndef_as_hex(&message);
+
+    return true;
+}
+
+static bool test_two_ndef_records(void) {
+    puts("Two NDEF records test");
     ndef_t message;
     uint8_t buffer[1024];
     ndef_init(&message, buffer, 1024);
@@ -168,11 +181,12 @@ static bool test_ndef_remove(void) {
 
 
 static bool test_nfct(void) {
-    printf("Starting NFCT test\n");
+    puts("Starting NFC T2T test");
     ndef_t ndef_message;
 
     ndef_init(&ndef_message, ndef_mem, 1024);
     ndef_add_text_record(&ndef_message, "Hello World", 11, "en", 2, UTF8);
+    ndef_add_uri_record(&ndef_message, NDEF_URI_HTTPS_WWW, "riot-os.org", 11);
 
     nfc_t2t_t t2t;
     create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
@@ -187,7 +201,9 @@ int main(void){
     puts("Starting NFC tests");
     test_t2t();
     test_ndef_text_record();
-    test_two_ndef_text_records();
+    test_ndef_uri_record();
+
+    test_two_ndef_records();
     test_ndef_remove();
     test_nfct();
     puts("Ending NFC tests");

@@ -2,7 +2,8 @@
 #define NDEF_TEXT_PAYLOAD_H
 
 #include <stdint.h>
-#include "ndef.h"
+#include "net/nfc/ndef/ndef.h"
+
 
 
 typedef enum {

@@ -9,7 +9,7 @@
 
 uint8_t const ndef_uri_record_type[] = {'U'};
 
-int ndef_add_uri_record(ndef_t *message, uint8_t identifier_code, const char *uri, uint32_t uri_length) {
+int ndef_add_uri_record(ndef_t *message, ndef_uri_identifier_code_t identifier_code, const char *uri, uint32_t uri_length) {
     uint32_t payload_length = IDENTIFIER_CODE_LENGTH + uri_length;
     assert(payload_length <= 65535);
 

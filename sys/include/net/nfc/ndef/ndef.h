@@ -164,8 +164,7 @@ int ndef_remove_record(ndef_t *message);
  */
 void ndef_clear(ndef_t *message);
 
-// int encode_ndef_message(ndef_t const *message, uint8_t *buffer, uint32_t const len);
-
-// int create_ndef_message_with_text(ndef_t *message, char const *text, uint32_t text_length);
+#include "net/nfc/ndef/ndef_text_payload.h"
+#include "net/nfc/ndef/ndef_uri_payload.h"
 
 #endif

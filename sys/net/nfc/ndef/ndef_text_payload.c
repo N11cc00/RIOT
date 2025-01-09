@@ -1,4 +1,3 @@
-#include "net/nfc/ndef/ndef_text_payload.h"
 #include "net/nfc/ndef/ndef.h"
 
 #include "errno.h"
