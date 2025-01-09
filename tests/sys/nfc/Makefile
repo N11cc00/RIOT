@@ -2,6 +2,7 @@ BOARD ?= nrf52840dk
 include ../Makefile.sys_common
 
 # this needs to be outsourced to the respective makefiles
+FEATURES_REQUIRED += periph_nfct
 USEMODULE += nfc_t2t
 USEMODULE += nfct
 USEMODULE += nrfx_nfct_t2t_emulator

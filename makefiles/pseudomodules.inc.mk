@@ -329,6 +329,7 @@ PSEUDOMODULES += netstats_neighbor_lqi
 PSEUDOMODULES += netstats_neighbor_tx_time
 PSEUDOMODULES += netstats_ipv6
 PSEUDOMODULES += netstats_rpl
+PSEUDOMODULES += nfct_t2t_emulator
 PSEUDOMODULES += nimble
 PSEUDOMODULES += nimble_adv_ext
 PSEUDOMODULES += nimble_autoconn_%

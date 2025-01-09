@@ -1,1 +1,4 @@
 FEATURES_REQUIRED = periph_nfct
+
+USEMODULE += t2t
+USEMODULE += ndef
