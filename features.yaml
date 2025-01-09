@@ -186,6 +186,8 @@ groups:
         help: An nRF MCU with a peripheral radio that supports nordics proprietary
               link layer protocol is present.
       - name: nfct_nrfx
+        help: An NFCT peripheral that can be used with the NFCT library.
+      - name: nfct_nrfx
         help: An NFCT peripheral that can be used with the NRFX driver.
 
   - title: CPU Grouping
