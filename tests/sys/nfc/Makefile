@@ -5,10 +5,10 @@ include ../Makefile.sys_common
 FEATURES_REQUIRED += periph_nfct
 USEMODULE += nfc_t2t
 USEMODULE += nfct
+USEMODULE += ndef 
 USEMODULE += nrfx_nfct_t2t_emulator
 USEMODULE += ztimer_sec
 USEMODULE += ztimer
-USEMODULE += ndef
 USEMODULE += event
 
 CFLAGS += -DISR_STACKSIZE=1024*2
