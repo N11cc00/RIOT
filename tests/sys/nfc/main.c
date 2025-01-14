@@ -31,7 +31,7 @@ static int test_t2t_static_mem(void){
     uint8_t tag_mem[NFC_T2T_STATIC_MEMORY_SIZE];
     nfc_t2t_t tag;
     int error = 0;
-    error = create_type_2_tag(&tag, NULL, NULL, NULL, sizeof(tag_mem), tag_mem);
+    error = t2t_create_type_2_tag(&tag, NULL, NULL, NULL, sizeof(tag_mem), tag_mem);
     if(error){
         printf("Error while creating the tag\n");
         return error;
@@ -91,7 +91,7 @@ static int test_t2t_dynamic_mem(void){
     uint8_t tag_mem[tag_size];
     nfc_t2t_t tag;
     int error = 0;
-    error = create_type_2_tag(&tag, NULL, NULL, NULL, sizeof(tag_mem), tag_mem);
+    error = t2t_create_type_2_tag(&tag, NULL, NULL, NULL, sizeof(tag_mem), tag_mem);
     if(error){
         printf("Error while creating the tag\n");
         return error;
@@ -189,7 +189,7 @@ static bool test_nfct(void) {
     ndef_add_uri_record(&ndef_message, NDEF_URI_HTTPS_WWW, "riot-os.org", 11);
 
     nfc_t2t_t t2t;
-    create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
+    t2t_create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
     nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &t2t, &ndef_message, TYPE_2_TAG);
     /* sleep for 10 seconds, then disable the tag */
     ztimer_sleep(ZTIMER_SEC, 10);

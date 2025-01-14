@@ -191,7 +191,7 @@ static uint8_t calculate_bytes_per_page(uint32_t mem_size){
 }
 
 
-int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+int t2t_create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                             uint32_t memory_size, uint8_t *memory)
 {
     tag->memory = memory;
@@ -241,10 +241,10 @@ int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_loc
     return 0;
 }
 
-int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+int t2t_create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                                 uint32_t memory_size, uint8_t *memory, ndef_t *msg){
     int error = 0;
-    error = create_type_2_tag(tag, sn, cc, lb, memory_size, memory);
+    error = t2t_create_type_2_tag(tag, sn, cc, lb, memory_size, memory);
     if(error != 0) return error;
     error = t2t_add_ndef_msg(tag, msg);
 
@@ -254,14 +254,14 @@ int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_
 
 int t2t_create_empty_default_tag(nfc_t2t_t *tag, uint32_t memory_size, uint8_t *memory){
     int error = 0;
-    error = create_type_2_tag(tag, NULL, NULL, NULL, memory_size, memory);
+    error = t2t_create_type_2_tag(tag, NULL, NULL, NULL, memory_size, memory);
     if(error) return error;
     error = t2t_add_empty_ndef_tlv(tag);
     return error;
 }
 
 int t2t_create_default_tag_with_ndef(nfc_t2t_t *tag, uint32_t memory_size, uint8_t *memory, ndef_t *msg){
-    return create_type_2_tag_with_ndef(tag, NULL, NULL, NULL, memory_size, memory, msg);
+    return t2t_create_type_2_tag_with_ndef(tag, NULL, NULL, NULL, memory_size, memory, msg);
 }
 
 int t2t_handle_read(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){

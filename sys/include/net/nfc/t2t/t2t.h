@@ -175,7 +175,7 @@ int t2t_create_default_tag_with_ndef(nfc_t2t_t *tag, uint32_t memory_size, uint8
  * @param memory 
  * @return int 
  */
-int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+int t2t_create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                                 uint32_t memory_size, uint8_t *memory);
 
 /**
@@ -190,7 +190,7 @@ int create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_loc
  * @param msg 
  * @return int 
  */
-int create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
+int t2t_create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                                 uint32_t memory_size, uint8_t *memory, ndef_t *msg);
 //int t2t_create_tag_with_given_memory(nfc_t2t_t *tag, uint32_t memory_size, uint8_t *memory); //TODO
 
