@@ -264,6 +264,40 @@ int t2t_create_default_tag_with_ndef(nfc_t2t_t *tag, uint32_t memory_size, uint8
     return t2t_create_type_2_tag_with_ndef(tag, NULL, NULL, NULL, memory_size, memory, msg);
 }
 
+int t2t_create_tag_from_given_memory(nfc_t2t_t *tag, uint32_t memory_size, uint8_t *memory, uint8_t uid_size){
+    int error = 0;
+    if (memory == NULL){
+        return -1;
+    }
+    if(memory_size < NFC_T2T_STATIC_MEMORY_SIZE){
+        return -1; //debatable - technically small NDEF messages could fit in less than 64 byte
+    }
+    tag->memory = memory;
+    tag->memory_size = memory_size;
+    if(memory_size > NFC_T2T_STATIC_MEMORY_SIZE){ 
+        tag->dynamic_layout = true;
+    }else{
+        tag->dynamic_layout = false;
+    }
+    tag->current_sector = 0;
+    tag->data_area_start = memory + NFC_T2T_START_STATIC_DATA_AREA;
+    tag->data_area_cursor = tag->data_area_start;
+    tag->data_area_size = tag->memory_size - (NFC_ISO14443A_UID_TRIPLE_SIZE + NFC_T2T_SIZE_STATIC_LOCK_BYTES + NFC_T2T_SIZE_CC);
+    tag->uid = (t2t_uid_t*) (tag->memory);
+    tag->lb = (t2t_static_lock_bytes_t*) (tag->memory + NFC_T2T_SIZE_UID);
+    tag->cc = (t2t_cc_t*) (tag->memory + NFC_T2T_SIZE_UID + NFC_T2T_SIZE_STATIC_LOCK_BYTES);
+    if(uid_size == NFC_ISO14443A_UID_SINGLE_SIZE 
+            || uid_size == NFC_ISO14443A_UID_DOUBLE_SIZE 
+            || uid_size == NFC_ISO14443A_UID_TRIPLE_SIZE){
+        tag->sn.sn_length = uid_size;
+    }else{
+        tag->sn.sn_length = NFC_ISO14443A_UID_TRIPLE_SIZE; //default to maximum
+    }
+    memcpy(tag->sn.sn, tag->uid, tag->sn.sn_length);
+    
+    return 0;
+}
+
 int t2t_handle_read(nfc_t2t_t *tag, uint8_t block_no, uint8_t *buf){
     uint8_t *block_address = block_no_to_address(block_no, tag);
     if((uint32_t) block_address >= ((uint32_t) tag->memory + tag->memory_size)){

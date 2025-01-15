@@ -192,7 +192,23 @@ int t2t_create_type_2_tag(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static
  */
 int t2t_create_type_2_tag_with_ndef(nfc_t2t_t *tag, t2t_sn_t *sn, t2t_cc_t *cc, t2t_static_lock_bytes_t *lb, 
                                 uint32_t memory_size, uint8_t *memory, ndef_t *msg);
-//int t2t_create_tag_with_given_memory(nfc_t2t_t *tag, uint32_t memory_size, uint8_t *memory); //TODO
+
+/**
+ * @brief Creates a tag with the given memory block without adding or removing any data.
+ * 
+ * This function takes the given memory as is and does not modify its content. 
+ * The content is not parsed and cannot be extended using t2t functions other then
+ * t2t_handle_write(). The uid_size is needed to determine how many of the 10 possible bytes
+ * are the actual uid. If set to a value other then NFC_ISO14443A_UID_SINGLE, 
+ * DOUBLE or TRIPLE_SIZE it will default to NFC_ISO14443A_UID_TRIPLE_SIZE.
+ * 
+ * @param tag 
+ * @param memory_size 
+ * @param memory 
+ * @param uid_size
+ * @return int 
+ */
+int t2t_create_tag_from_given_memory(nfc_t2t_t *tag, uint32_t memory_size, uint8_t *memory, uint8_t uid_size);
 
 //operations
 /**

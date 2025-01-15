@@ -15,6 +15,26 @@
 static uint8_t ndef_mem[BUFFER_SIZE];
 static uint8_t t2t_mem[BUFFER_SIZE];
 
+// static mem example from T2T Operation Document
+static uint8_t predefined_t2t[] = {
+    0x00, 0x01, 0x02, 0x03, // UID 1
+    0x04, 0x05, 0x06, 0x07, // UID 2
+    0x08, 0x09, 0x00, 0x00, // UID 3, LB
+    0xE1, 0x10, 0x06, 0x00, // CC
+    0x03, 0x00, 0xFE, 0x00, // Empty NDEF message and terminator
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
 static void print_ndef_as_hex(ndef_t const *message) {
     printf("NDEF message size: %lu\n", message->buffer.cursor);
     for (uint32_t i = 0; i < message->buffer.cursor; ++i) {
@@ -120,10 +140,36 @@ static int test_t2t_dynamic_mem(void){
 
 }
 
+static int test_t2t_with_predefined_mem(void){
+    printf("Start t2t predefined mem test\n");
+    nfc_t2t_t tag;
+    t2t_create_tag_from_given_memory(&tag, NFC_T2T_DEFAULT_MEM_SIZE, predefined_t2t, 4);
+    uint8_t buffer[16];
+    t2t_handle_read(&tag, 0, buffer);
+    
+    for (uint8_t i=0; i<16; i++){
+       printf("%#02x ", buffer[i]);
+       if((i+1) % 4 == 0){
+        printf("\n");
+       }
+    }
+    buffer[0] = 'T';
+    buffer[1] = 'E';
+    buffer[2] = 'S';
+    buffer[3] = 'T';
+    t2t_handle_write(&tag, 5, buffer);
+
+    t2t_dump_tag_memory(&tag);
+
+    return 0;
+
+}
+
 
 static bool test_t2t(void) {
     test_t2t_static_mem();
     test_t2t_dynamic_mem();
+    test_t2t_with_predefined_mem();
     return true;
 }
 
