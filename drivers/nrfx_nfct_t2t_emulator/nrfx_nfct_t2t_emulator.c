@@ -101,15 +101,8 @@ static void send_ack_nack(bool ack) {
  * @param bytes     4 bytes of data to write
  */
 static void process_write_command(uint8_t block_no, uint8_t const *bytes) {
-
     /* write 4 bytes to the address */
-    if (!t2t_handle_write(tag, block_no, bytes)) {
-        send_ack_nack(false);
-        return;
-    }
-
-    /* if the tag is not writeable, return a NACK */
-    if (!t2t_is_writeable(tag)) {
+    if (t2t_handle_write(tag, block_no, bytes) != 0) {
         LOG_WARNING("Tag is not writeable\n");
         send_ack_nack(false);
         return;
