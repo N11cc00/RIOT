@@ -200,13 +200,18 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
         record.id = ndef_write_to_buffer(message, id, id_length);
     }
 
-    /** this needs to be done so the payload points to the correct position 
-     *  for further writes 
-     * */
-    record.payload = &message->buffer.memory[message->buffer.cursor];
+    if (payload != NULL) {
+        record.payload = ndef_write_to_buffer(message, payload, payload_length);
+    } else {
+        /** 
+         *  this needs to be done so the payload points to the correct position 
+         *  for further writes
+         */
+        record.payload = &message->buffer.memory[message->buffer.cursor];
 
-    /* the payload has to be written by the calling function */
-    (void) payload;
+        /* the payload has to be written by the calling function */
+        (void) payload;
+    }
 
     message->records[message->record_count] = record;
     message->record_count += 1;

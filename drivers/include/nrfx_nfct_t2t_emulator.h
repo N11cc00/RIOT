@@ -27,7 +27,8 @@ typedef struct {
  * @brief Initializes the Type 2 Tag emulator
  *
  * @note The tag will be modified and read after passing it to the emulator. To
- * guarantee that the emulator works correctly, the tag after initialization.
+ * guarantee that the emulator works correctly, the tag after should not be
+ * accessed after initialization.
  * The tag can be enabled after initialization.
  *
  * @param[in] tag Tag to use for the emulator
@@ -43,6 +44,8 @@ void uninitialize_t2t(void);
 
 /**
  * @brief Enables an initialized Type 2 Tag emulator
+ *
+ * @note The emulator has to be initialized first.
  */
 void enable_t2t(void);
 

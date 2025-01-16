@@ -74,10 +74,10 @@ typedef enum {
 } ndef_record_tnf_t;
 
 typedef enum {
-	NDEF_FIRST_RECORD  = 0x80, /**< First record. */
-	NDEF_MIDDLE_RECORD = 0x00, /**< Middle record. */
-	NDEF_LAST_RECORD   = 0x40, /**< Last record. */
-	NDEF_LONE_RECORD   = 0xC0  /**< Only one record in the message. */
+	NDEF_FIRST_RECORD  = 0x80, /** First record. */
+	NDEF_MIDDLE_RECORD = 0x00, /** Middle record. */
+	NDEF_LAST_RECORD   = 0x40, /** Last record. */
+	NDEF_LONE_RECORD   = 0xC0  /** Only one record in the message. */
 } ndef_record_location_t;
 
 typedef struct {
@@ -129,7 +129,7 @@ uint8_t* ndef_write_to_buffer(ndef_t* ndef, uint8_t const *data, uint32_t data_l
 void ndef_init(ndef_t *message, uint8_t *buffer, uint32_t buffer_size);
 
 /**
- * @brief 
+ * @brief Adds an NDEF record to the end of the NDEF message
  * 
  * @param message 
  * @param type 
@@ -153,7 +153,7 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
  * @brief Removes the last record from the NDEF message
  * 
  * @param message 
- * @return int 0 if successful, error otherwise
+ * @return 0 if successful, error otherwise
  */
 int ndef_remove_record(ndef_t *message);
 
