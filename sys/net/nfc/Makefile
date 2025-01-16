@@ -1,7 +1,7 @@
-ifneq (,$(filter ndef,$(USEMODULE)))
+ifneq (,$(filter nfc_ndef,$(USEMODULE)))
   DIRS += ndef
 endif
-ifneq (,$(filter nfct,$(USEMODULE)))
+ifneq (,$(filter nfc_nfct,$(USEMODULE)))
   DIRS += nfct
 endif
 ifneq (,$(filter nfc_t2t,$(USEMODULE)))

@@ -23,6 +23,15 @@ typedef struct {
     uint32_t size;
 } nrfx_t2t_transmit_event_t;
 
+#ifndef DEFAULT_T2T_EMULATOR_DEV
+#define DEFAULT_T2T_EMULATOR_DEV (nfct_t2t_emulator_t) {    \
+    .init = initialize_t2t,                                 \
+    .enable = enable_t2t,                                   \
+    .disable = disable_t2t,                                 \
+    .uninit = uninitialize_t2t                              \
+}
+#endif
+
 /**
  * @brief Initializes the Type 2 Tag emulator
  *

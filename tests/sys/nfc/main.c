@@ -1,14 +1,12 @@
-//#include "../../../sys/include/net/nfc/t2t/t2t.h"
-#include "net/nfc/t2t/t2t.h"
 #include "net/nfc/nfct/nfct.h"
+#include "net/nfc/ndef/ndef.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include "board.h"
-#include "cfg_nfct_default.h"
 #include "log.h"
 #include "ztimer.h"
-#include "net/nfc/ndef/ndef.h"
+
 
 #define BUFFER_SIZE 1024
 
@@ -236,10 +234,10 @@ static bool test_nfct(void) {
 
     nfc_t2t_t t2t;
     t2t_create_type_2_tag(&t2t, NULL, NULL, NULL, NFC_T2T_STATIC_MEMORY_SIZE, t2t_mem);
-    nfct_create_tag(&DEFAULT_T2T_EMULATOR_DEV, &t2t, &ndef_message, TYPE_2_TAG);
+    nfct_create_type_2_tag(&DEFAULT_T2T_EMULATOR_DEV, &t2t, &ndef_message, TYPE_2_TAG);
     /* sleep for 10 seconds, then disable the tag */
     ztimer_sleep(ZTIMER_SEC, 10);
-    nfct_delete_tag(&DEFAULT_T2T_EMULATOR_DEV);
+    nfct_delete_type_2_tag(&DEFAULT_T2T_EMULATOR_DEV);
     return true;
 }
 

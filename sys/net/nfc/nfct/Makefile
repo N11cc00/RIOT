@@ -1,8 +1,3 @@
-MODULE = nfct
-
-# Check if one tag type module is available
-ifeq (,$(filter nfc_t2t,$(USEMODULE)))
-	$(error "No NFCT tag type module used.")
-endif
+MODULE = nfc_nfct
 
 include $(RIOTBASE)/Makefile.base
