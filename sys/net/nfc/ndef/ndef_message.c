@@ -81,6 +81,11 @@ void ndef_pretty_print(ndef_t const *ndef) {
         ndef_record_desc_t const *record = &ndef->records[i];
         printf("Record %d\n", i);
         printf("----\n");
+        printf("MB: %d\n", record->header[0] & RECORD_MB_MASK ? true : false);
+        printf("ME: %d\n", record->header[0] & RECORD_ME_MASK ? true : false);
+        printf("CF: %d\n", record->header[0] & RECORD_CF_MASK ? true : false);
+        printf("SR: %d\n", record->header[0] & RECORD_SR_MASK ? true : false);
+        printf("IL: %d\n", record->header[0] & RECORD_IL_MASK ? true : false);
         printf("TNF: %d\n", record->header[0] & RECORD_TNF_MASK);
         printf("Type length: %d\n", record->type_length[0]);
         printf("Type: ");
@@ -129,7 +134,7 @@ void ndef_init(ndef_t *message, uint8_t *buffer, uint32_t buffer_size) {
     message->record_count = 0;
 }
 
-int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, bool mb, bool me, bool cf, bool sr, bool il, ndef_record_tnf_t tnf) {
+int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, ndef_record_tnf_t tnf) {
     ndef_record_desc_t record;
 
     assert(message != NULL);
@@ -140,6 +145,8 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
         LOG_ERROR("NDEF record count exceeds maximum\n");
         return -1;
     }
+
+    bool mb, me, cf, sr, il;
 
     /** 
      *  The ME flag can only be set on the last record of the NDEF message.
@@ -154,14 +161,23 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
 
     /* message end has to be true because records are only added at the end */
     me = true;
+    
+    /* chunking is not supported */
+    cf = false;
 
+    /* if the payload is short, set sr to true */
     if (payload_length <= SHORT_RECORD_PAYLOAD_LENGTH) {
         sr = true;
     } else {
         sr = false;
     }
 
-
+    /* if an ID is present, set il to true */
+    if (id) {
+        il = true;
+    } else {
+        il = false;
+    }
 
     uint8_t header_byte = 0;
     header_byte |= mb ? RECORD_MB_MASK : 0;
@@ -172,7 +188,7 @@ int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, u
     header_byte |= tnf;
     
 
-    if (sr == 1) {
+    if (sr) {
         record.record_type = NDEF_SHORT_RECORD;
     } else {
         record.record_type = NDEF_LONG_RECORD;

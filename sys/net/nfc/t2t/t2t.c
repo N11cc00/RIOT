@@ -1,6 +1,7 @@
 #include "net/nfc/t2t/t2t.h"
 #include <stdio.h>
 #include <string.h>
+#include "log.h"
 
 /**
  * @brief Sets dynamic lock bits and decreases data area.
@@ -450,6 +451,7 @@ int t2t_create_ndef_tlv(nfc_t2t_t *tag, uint16_t length){
 
 int t2t_add_ndef_msg(nfc_t2t_t *tag, ndef_t const *msg){
     if(free_space_in_data_area(tag) <= msg->buffer.cursor){
+        LOG_ERROR("Not enough space in data area for NDEF message\n");
         return -1;
     }
     int tlv_header_size = 0;

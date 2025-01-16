@@ -89,25 +89,25 @@ typedef struct {
 
 /**
  * @brief Pretty prints the NDEF message in human readable format.
- * 
+ *
  * @param[in] ndef NDEF message to print
  */
 void ndef_pretty_print(ndef_t const *ndef);
 
 /**
  * @brief Get the NDEF message size
- * 
+ *
  * @param[in] ndef NDEF messgae
- * @return size_t 
+ * @return size_t
  */
 size_t ndef_get_size(ndef_t const *ndef);
 
 /**
- * @brief Writes the data buffer to the given NDEF message. 
- * 
+ * @brief Writes the data buffer to the given NDEF message.
+ *
  * @note This writes the data of the given buffer and
  * shifts the cursor of the NDEF buffer by the length of the data.
- * 
+ *
  * @param[in,out] ndef The NDEF message that gets the data written to its memory
  * @param[in] data Data to write
  * @param[in] data_length Length of the data
@@ -118,10 +118,10 @@ uint8_t* ndef_write_to_buffer(ndef_t* ndef, uint8_t const *data, uint32_t data_l
 
 /**
  * @brief Initializes the given NDEF message with the given buffer and buffer size.
- * 
+ *
  * @note The buffer needs to be allocated by the user and has to stay valid for the entire lifetime
  * of the NDEF message struct.
- * 
+ *
  * @param[out] message Message to initilaize
  * @param[in] buffer Empty buffer that is used by the NDEF message
  * @param[in] buffer_size Buffer size
@@ -130,36 +130,38 @@ void ndef_init(ndef_t *message, uint8_t *buffer, uint32_t buffer_size);
 
 /**
  * @brief Adds an NDEF record to the end of the NDEF message
- * 
- * @param message 
- * @param type 
- * @param type_length 
- * @param id 
- * @param id_length 
- * @param payload 
- * @param payload_length 
- * @param mb 
- * @param me 
- * @param cf 
- * @param sr 
- * @param il 
- * @param tnf 
+ *
+ * @param[in,out] 	message
+ * @param[in] 		type
+ * @param[in] 		type_length
+ * @param[in] 		id
+ * @param[in] 		id_length
+ * @param[in] 		payload
+ * @param[in] 		payload_length
+ * @param[in] 		tnf
  * @return int 0 if successful, error otherwise
  */
-int ndef_add_record(ndef_t *message, uint8_t const *type, uint8_t type_length, uint8_t const *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, bool mb, bool me, bool cf, bool sr, bool il, ndef_record_tnf_t tnf);
+int ndef_add_record(ndef_t *message, const uint8_t *type, uint8_t type_length, const uint8_t *id, uint8_t id_length, uint8_t const *payload, uint32_t payload_length, ndef_record_tnf_t tnf);
 
+/**
+ * @brief Returns the size of the NDEF message
+ *
+ * @param[in] message NDEF message
+ * @return size_t Size of the message
+ */
+size_t ndef_get_size(const ndef_t *message);
 
 /**
  * @brief Removes the last record from the NDEF message
- * 
- * @param message 
+ *
+ * @param message
  * @return 0 if successful, error otherwise
  */
 int ndef_remove_record(ndef_t *message);
 
 /**
  * @brief Removes all records from the NDEF message
- * 
+ *
  * @param message Message to clear
  */
 void ndef_clear(ndef_t *message);
