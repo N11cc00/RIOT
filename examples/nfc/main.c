@@ -95,7 +95,6 @@ int main(void)
     int dimensions;
 
     while (1) {
-        LED1_OFF;
         /* read a temperature value from the sensor */
         dimensions = saul_reg_read(temp_sensor, &temperature);
         if (dimensions < 1) {
@@ -110,12 +109,12 @@ int main(void)
         /*Create Tag with temperature as text*/
         nfct_start_type_2_tag_with_text(&DEFAULT_T2T_EMULATOR_DEV, &tag, t2t_mem, BUFFER_SIZE, text_buf, "de", UTF8);
 
-        LED1_ON;
-        ztimer_sleep(ZTIMER_SEC, 5);
+        ztimer_sleep(ZTIMER_SEC, 60);
         test_utils_print_stack_usage();
         t2t_dump_tag_memory(&tag);
 
         /*Stop tag emulation*/
         nfct_stop_type_2_tag(&DEFAULT_T2T_EMULATOR_DEV);
+        t2t_clear_data_area(&tag);
     }
 }

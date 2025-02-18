@@ -51,7 +51,7 @@ static void add_text_message_to_type_2_tag(nfc_t2t_t *tag,
 
     ndef_init(&message, buffer, message_size);
     ndef_add_text_record(&message, content, content_size, lang_code, lang_code_size, encoding);
-    t2t_add_ndef_msg(tag, &message);
+    //t2t_add_ndef_msg(tag, &message);
     return;
 }
 

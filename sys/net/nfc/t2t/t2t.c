@@ -135,7 +135,7 @@ int t2t_set_read_only(nfc_t2t_t *tag){
 }
 
 t2t_sn_t t2t_create_default_sn(void){
-    t2t_sn_t sn = NFC_T2T_4_BYTE_DEFAULT_UID;
+    t2t_sn_t sn = NFC_T2T_7_BYTE_DEFAULT_UID;
     return sn;
 }
 
@@ -409,14 +409,13 @@ int t2t_handle_write(nfc_t2t_t *tag, uint8_t block_no, uint8_t const *buf){
             LOG_ERROR("Can't overwrite UID, aborting write\n");
             return -1; //debatable if error or just ignored ok
         }else{
-            LOG_ERROR("Writing content to tag memory\n");
+            LOG_DEBUG("Writing content to tag memory\n");
             memcpy(block_address, buf, NFC_T2T_BLOCK_SIZE);
         }
     }else{
-        LOG_ERROR("Writing content to tag memory\n");
+        LOG_DEBUG("Writing content to tag memory\n");
         memcpy(block_address, buf, NFC_T2T_BLOCK_SIZE);
     }
-    
     return 0;
     
 }

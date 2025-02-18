@@ -405,7 +405,7 @@
  * Integer value. Minimum: 0. Maximum: 5.
  */
 #ifndef NRFX_NFCT_CONFIG_TIMER_INSTANCE_ID
-#define NRFX_NFCT_CONFIG_TIMER_INSTANCE_ID 4
+#define NRFX_NFCT_CONFIG_TIMER_INSTANCE_ID 0
 #endif
 
 /**
@@ -1236,7 +1236,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_TIMER1_ENABLED
-#define NRFX_TIMER1_ENABLED 1
+#define NRFX_TIMER1_ENABLED 0
 #endif
 
 /**
@@ -1245,7 +1245,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_TIMER2_ENABLED
-#define NRFX_TIMER2_ENABLED 1
+#define NRFX_TIMER2_ENABLED 0
 #endif
 
 /**
@@ -1254,7 +1254,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_TIMER3_ENABLED
-#define NRFX_TIMER3_ENABLED 1
+#define NRFX_TIMER3_ENABLED 0
 #endif
 
 /**
@@ -1263,7 +1263,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_TIMER4_ENABLED
-#define NRFX_TIMER4_ENABLED 1
+#define NRFX_TIMER4_ENABLED 0
 #endif
 
 /**

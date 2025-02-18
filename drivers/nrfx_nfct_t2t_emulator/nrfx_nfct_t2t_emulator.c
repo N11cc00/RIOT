@@ -28,6 +28,19 @@
 
 #ifdef NRFX_NFCT_T2T_EMULATOR_TIMING
 static ztimer_now_t last_read = 0;
+static ztimer_now_t last_write = 0;
+static uint8_t last_block = 0;
+static uint8_t last_write_block = 0;
+static ztimer_now_t first_read = 0;
+static ztimer_now_t first_write = 0;
+
+static ztimer_now_t avg_read_block = 0;
+static ztimer_now_t avg_read_all = 0;
+static ztimer_now_t avg_write_block = 0;
+static ztimer_now_t avg_write_all = 0;
+static bool updated_cc = false;
+
+
 #endif
 
 #define BUFFER_SIZE 256
@@ -130,11 +143,11 @@ static void send_ack_nack(bool ack)
 {
     uint8_t buffer[1];
     if (ack) {
-        LOG_DEBUG("Sending ACK");
+        LOG_DEBUG("Sending ACK\n");
         buffer[0] = T2T_ACK_RESPONSE;
     }
     else {
-        LOG_DEBUG("Sending NACK");
+        LOG_DEBUG("Sending NACK\n");
         buffer[0] = T2T_NACK_RESPONSE;
     }
     nrfx_nfct_data_desc_t data_description = {
@@ -153,15 +166,40 @@ static void send_ack_nack(bool ack)
  */
 static void process_write_command(uint8_t block_no, const uint8_t *bytes)
 {
+    #ifdef NRFX_NFCT_T2T_EMULATOR_TIMING
+        ztimer_now_t start_write_u = ztimer_now(ZTIMER_USEC);
+    #endif
     /* write 4 bytes to the address */
     if (t2t_handle_write(tag, block_no, bytes) != 0) {
         LOG_WARNING("Tag is not writeable\n");
         send_ack_nack(false);
         return;
     }
-
-    LOG_DEBUG("Wrote 4 bytes to block number %d", block_no);
     send_ack_nack(true);
+    LOG_DEBUG("Wrote 4 bytes to block number %d", block_no);
+    #ifdef NRFX_NFCT_T2T_EMULATOR_TIMING
+        ztimer_now_t now_u = ztimer_now(ZTIMER_USEC);    
+        ztimer_now_t now = ztimer_now(ZTIMER_MSEC);
+        printf("Time needed for this write to block %d: %" PRIu32 " us\n", block_no, now_u - start_write_u);
+        
+        if(first_write == 0){
+            first_write = now;
+        }
+        if(last_write != 0){
+            printf("Time since last write: %" PRIu32 " ms\n", now - last_write);
+        }
+        
+        if(block_no < last_write_block){ //write procedure updates Length first, then adds terminator TLV
+            updated_cc = true;
+        }
+        if(updated_cc && block_no > last_write_block){
+            printf("Time needed for complete write: %" PRIu32 " ms \n", now - first_write);
+            first_write = 0;
+            updated_cc = false;
+        }
+        last_write = now;
+        last_write_block = block_no;
+    #endif
     print_bytes_as_hex(tag->memory, tag->memory_size);
 }
 
@@ -195,6 +233,9 @@ static void *nrfx_event_loop(void *arg)
  */
 static void process_read_command(uint8_t block_no)
 {
+    #ifdef NRFX_NFCT_T2T_EMULATOR_TIMING
+        ztimer_now_t start_read_u = ztimer_now(ZTIMER_USEC);
+    #endif
     t2t_handle_read(tag, block_no, data_buffer_tx);
 
     /* Set up the data descriptor for the response */
@@ -208,11 +249,35 @@ static void process_read_command(uint8_t block_no)
     assert(error == NRFX_SUCCESS);
 
 #ifdef NRFX_NFCT_T2T_EMULATOR_TIMING
+    ztimer_now_t now_u = ztimer_now(ZTIMER_USEC);    
     ztimer_now_t now = ztimer_now(ZTIMER_MSEC);
+    printf("Time needed for this read (block %d): %" PRIu32 " us\n", block_no, now_u - start_read_u);
+
+    if(block_no == 0){
+        first_read = now;
+    }
     if (last_read != 0) {
         printf("Time between this and last read: %" PRIu32 " ms\n", now - last_read);
+        //printf("Time needed for this read (block %d): %" PRIu32 " us\n", block_no, now_u - start_read_u);
+        if(avg_read_block == 0){
+            avg_read_block += (now_u - start_read_u);
+        }else{
+            avg_read_block += (now_u - start_read_u);
+            avg_read_block /= 2;
+        }
+    }
+    //if (block_no < last_block){
+    if (block_no == 8){
+        printf("Time for all blocks <= %d: %" PRIu32 " ms\n", block_no, now - first_read);
+        if(avg_read_all == 0){
+            avg_read_all += (now - first_read);
+        }else{
+            avg_read_all += (now - first_read);
+            avg_read_all /= 2;
+        }
     }
     last_read = now;
+    last_block = block_no;
 #endif
 }
 
@@ -571,6 +636,10 @@ void disable_t2t(void)
         LOG_ERROR("T2T is not enabled\n");
         return;
     }
+    #ifdef NRFX_NFCT_T2T_EMULATOR_TIMING
+        printf("Average time for one read request: %" PRIu32 " us\n", avg_read_block);
+        printf("Average time for complete message read: %" PRIu32 " ms\n", avg_read_all);
+    #endif
 
     disable_event.handler = disable_handler;
     event_post(&event_queue, &disable_event);

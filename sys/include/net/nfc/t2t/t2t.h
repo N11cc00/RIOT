@@ -60,6 +60,7 @@
 
 //selfmade defaults - TODO check how a reader interprets that
 #define NFC_T2T_4_BYTE_DEFAULT_UID {NFC_ISO14443A_UID_SINGLE_SIZE, {0x09, 0x01, 0x02, 0x03}} //ISO-14443-3 6.4.4 Table 10
+#define NFC_T2T_7_BYTE_DEFAULT_UID {NFC_ISO14443A_UID_DOUBLE_SIZE, {0x04, 0xC4, 0x06, 0xC2, 0x12, 0x6F, 0x84}} //ISO-14443-3 6.4.4 Table 10
 #define NFC_T2T_10_BYTE_DEFAULT_UID {NFC_ISO14443A_UID_TRIPLE_SIZE, {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09}} //ISO-14443-3 6.4.4 Table 10
 
 // typedefs
