@@ -66,7 +66,6 @@ def fix_header(file_path):
         # the ifndef block has size 2
         assert len(ifndef.split("\n")) == 2
 
-        print(endif)
         # the endif block has size 1
         assert len(endif.split("\n")) == 1
 
@@ -93,18 +92,33 @@ def fix_header(file_path):
         print(f'Header name:\n{header_name}')
         """
 
+        # the correct order is:
+        # ifndef block -> initial doxygen block -> end of doxygen block -> endif block
+
         # if this order isn't adhered to, the files needs to be fixed
         if (start_ifndef_no < start_initial_doxygen_block_no < start_end_of_doxygen_block_no < start_endif_no):
             print('{file_path} is OK, no fixing needed')
             return None
         
         if (start_initial_doxygen_block_no < start_ifndef_no < start_endif_no < start_end_of_doxygen_block_no):
-            print(f'Fixing {file_path}')
+            print(f'Normal fix for {file_path}')
             content = swap_lines(content, (start_ifndef_no, end_ifndef_no), (start_initial_doxygen_block_no,end_initial_doxygen_block_no))
             content = swap_lines(content, (start_end_of_doxygen_block_no, end_end_of_doxygen_block_no), (start_endif_no, end_endif_no))
-            print(f'Fixed {file_path}')
             return content 
+        elif (start_ifndef_no < start_initial_doxygen_block_no < start_endif_no < start_end_of_doxygen_block_no):
+            # only swap the endif and end of doxygen blocks
+            print(f"Fixing only the end of the file for {file_path}")
+            content = swap_lines(content, 
+                                 (start_endif_no, end_endif_no), (start_end_of_doxygen_block_no, end_end_of_doxygen_block_no))
+
+        elif (start_initial_doxygen_block_no < start_ifndef_no < start_end_of_doxygen_block_no < start_endif_no):
+            print(f"Fixing only the start of the file for {file_path}")
+            content = swap_lines(content,
+                                 (start_ifndef_no, end_ifndef_no),
+                                 (start_initial_doxygen_block_no, end_initial_doxygen_block_no))
+        
         else:
+            raise Exception('The order is not covered by the cases above')
             print(f'Error in {file_path}, cannot fix')
             print(f'ifndef: {start_ifndef_no} {end_ifndef_no}')
             print(f'initial doxygen block: {start_initial_doxygen_block_no} {end_initial_doxygen_block_no}')
@@ -142,7 +156,7 @@ def find_end_of_doxygen_block(content: str):
     return doxygen_block.group(0)
 
 def find_endif(content: str):
-    endif = re.search(r'#endif[ \t]+\/\*.*?\*\/', content)
+    endif = re.search(r'#endif[ \t]+\/\*.*?_H\s?\*\/', content)
     if endif is None:
         raise Exception('End of header guard not found')
     return endif.group(0)
