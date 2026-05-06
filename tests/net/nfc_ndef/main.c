@@ -22,8 +22,9 @@
  *
  * @param buffer1 First buffer to compare
  * @param buffer2 Second buffer to compare
- * @return true     if the buffers are equal
- * @return false    if the buffers are not equal
+ *
+ * @retval true     if the buffers are equal
+ * @retval false    if the buffers are not equal
  */
 static bool compare_ndef_buffers(ndef_buffer_t buffer1, ndef_buffer_t buffer2)
 {
@@ -175,7 +176,8 @@ static void test_ndef_from_buffer(void)
     TEST_ASSERT_EQUAL_INT(message.record_count, 2);
 }
 
-static void test_ndef_long_record(void) {
+static void test_ndef_long_record(void)
+{
     static uint8_t buffer[] = {
         0xC1, 0x01,
         0x00, 0x00, 0x01, 0xC0, /* payload length of 448 (MSB, 4 bytes) */

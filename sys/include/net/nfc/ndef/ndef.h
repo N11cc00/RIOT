@@ -10,15 +10,13 @@
  * @ingroup     net
  * @brief       Module for the serialization and parsing of NFC Data Exchange Format messages
  * @see         [NFC Forum NFC Data Exchange Format (NDEF) Technical Specification 1.0](https://archive.org/details/nfcforum-ts-ndef-1.0)
- * About
- * =====
+ * ## About
  *
  * This module provides serialization and parsing of NDEF messages for various NDEF record
  * types. As the name suggests, the NDEF is exclusively designed and used for NFC as a
  * high-level data format.
  *
- * NDEF Message Format
- * ===================
+ * ## NDEF Message Format
  *
  * An NDEF message can be understood as a list of NDEF records. Each record starts with a mandatory
  * header that contains the type of the NDEF message, the length of the payload and an optional ID.
@@ -26,8 +24,7 @@
  *
  * @note NDEF records with IDs are not supported by this module.
  *
- * NDEF Record Types
- * =================
+ * ### NDEF Record Types
  *
  * The NFC Forum provides Record Type Definitions (RTDs) for various NDEF record types. The current
  * record types supported by this module are:
@@ -36,10 +33,9 @@
  * - URI
  * - MIME
  *
- * Creating an NDEF Message
- * ========================
+ * ### Creating an NDEF Message
  *
- * An NDEF message with one text record can be added created the following way
+ * An NDEF message with one text record can created the following way
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ {.c}
  * ndef_t message;
  * uint8_t buffer[1024];
@@ -50,8 +46,7 @@
  *
  * The NDEF message can then be passed to other NFC functions.
  *
- * Parsing an NDEF Message
- * =======================
+ * ### Parsing an NDEF Message
  *
  * To convert a buffer of bytes into an NDEF message @ref ndef_from_buffer has to be called.
  * In the following code example the buffer has a size of 1024 bytes and is filled with a valid byte
@@ -115,10 +110,10 @@ extern "C" {
  */
 #define NDEF_RECORD_LONG_PAYLOAD_LENGTH_SIZE  4
 
-#ifndef CONFIG_NDEF_MAX_RECORD_COUNT
 /**
  * @brief Specifies how many NDEF records can be stored in one NDEF message
  */
+#ifndef CONFIG_NDEF_MAX_RECORD_COUNT
 #  define CONFIG_NDEF_MAX_RECORD_COUNT 16
 #endif
 
@@ -159,45 +154,14 @@ typedef enum {
  * positions in the NDEF message.
  */
 typedef struct {
-    /**
-     * @brief Points to the header of the record
-     */
-    uint8_t *header;
-
-    /**
-     * @brief Points to the type length field
-     */
-    uint8_t *type_length;
-
-    /**
-     * @brief Points to the type field
-     */
-    uint8_t *type;
-
-    /**
-     * @brief Points to the ID length field
-     */
-    uint8_t *id_length;
-
-    /**
-     * @brief Points to the ID field
-     */
-    uint8_t *id;
-
-    /**
-     * @brief Record type of this record
-     */
-    ndef_record_type_t record_type;
-
-    /**
-     * @brief Points to the payload length field
-     */
-    uint8_t *payload_length;
-
-    /**
-     * @brief Points to the payload field
-     */
-    uint8_t *payload;
+    uint8_t *header; /**< Points to the header of the record */
+    uint8_t *type_length; /**< Points to the type length field */
+    uint8_t *type; /**< Points to the type field */
+    uint8_t *id_length; /**< Points to the ID length field */
+    uint8_t *id; /**< Points to the ID field */
+    ndef_record_type_t record_type; /**< Record type of this record */
+    uint8_t *payload_length; /**< Points to the payload length field */
+    uint8_t *payload; /**< Points to the payload field */
 } ndef_record_desc_t;
 
 /**
@@ -216,9 +180,7 @@ typedef enum {
     NDEF_TNF_ABSOLUTE_URI = 0x03,
     /** NFC Forum external type [NFC RTD]. */
     NDEF_TNF_EXTERNAL_TYPE = 0x04,
-    /** The value indicates that there is no type associated with this
-     *  record.
-     */
+    /** The value indicates that there is no type associated with this record. */
     NDEF_TNF_UNKNOWN_TYPE = 0x05,
     /** The value is used for the record chunks used in chunked payload. */
     NDEF_TNF_UNCHANGED = 0x06,
@@ -295,8 +257,7 @@ void ndef_init(ndef_t *ndef, uint8_t *buffer, uint32_t buffer_size);
  * @param[in]       id_length       Length of the ID
  * @param[in]       payload_length  Length of the payload
  * @param[in]       tnf             Type Name Format of the record
- * @return 0 if successful
- * @return error otherwise
+ * @return 0 if successful, error otherwise
  */
 int ndef_record_header_add(ndef_t *ndef, const uint8_t *type, uint8_t type_length,
     const uint8_t *id, uint8_t id_length, uint32_t payload_length, ndef_record_tnf_t tnf);
@@ -333,9 +294,7 @@ int ndef_parse(const ndef_t *ndef, ndef_record_desc_t *record_descriptors,
                size_t record_descriptors_size);
 
 /**
- * @brief Creates an NDEF message from a byte buffer
- *
- * @note The previous contents of the NDEF message are overwritten.
+ * @return 0 if successful, error otherwise
  *
  * @param[out]   ndef        NDEF message
  * @param[in]    buffer      Byte buffer
@@ -424,6 +383,7 @@ typedef enum {
  * @param[in]       identifier_code     URI identifier code
  * @param[in]       uri                 URI
  * @param[in]       uri_length          Length of the URI
+ *
  * @retval 0                            on success
  * @retval -1                           if writing the payload failed
  */
@@ -439,6 +399,7 @@ int ndef_record_uri_add(ndef_t *ndef, ndef_uri_identifier_code_t identifier_code
  * @param mime_type_length      Length of the MIME type
  * @param mime_payload          MIME payload
  * @param mime_payload_length   Length of the MIME payload
+ *
  * @retval 0                    on success
  * @retval -1                   if writing the payload failed
  */
